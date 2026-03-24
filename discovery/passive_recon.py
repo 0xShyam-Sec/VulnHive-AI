@@ -359,6 +359,137 @@ def _probe_common_paths(target: str, client: httpx.Client, state: ScanState):
         "wp-config.php", "config.json", "secrets.json", "debug.log",
     }
 
+    # ── Content signatures to verify files are REAL (not SPA catch-all) ──
+    # Each maps a path keyword to content markers that MUST appear if the file is genuine.
+    # If none of these markers appear, it's a false positive (SPA returning index.html).
+    CONTENT_SIGNATURES = {
+        ".env": {
+            "markers": [
+                r"^[A-Z_]+=",           # KEY=VALUE at start of line
+                r"DB_|DATABASE_|REDIS_|MONGO_|AWS_|SECRET|API_KEY|PASSWORD|TOKEN",
+            ],
+            "anti_markers": ["<!doctype", "<html", "<head"],
+            "description": "Environment configuration file",
+            "severity": "Critical",
+        },
+        ".git/config": {
+            "markers": [r"\[core\]", r"\[remote", r"repositoryformatversion"],
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "Git repository configuration",
+            "severity": "High",
+        },
+        ".git/HEAD": {
+            "markers": [r"^ref: refs/heads/", r"^[0-9a-f]{40}$"],
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "Git HEAD reference",
+            "severity": "High",
+        },
+        "backup.sql": {
+            "markers": [r"CREATE TABLE|INSERT INTO|DROP TABLE|ALTER TABLE|--.*dump", r"mysqldump|pg_dump"],
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "Database backup file",
+            "severity": "Critical",
+        },
+        "db.sql": {
+            "markers": [r"CREATE TABLE|INSERT INTO|DROP TABLE|ALTER TABLE"],
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "Database dump file",
+            "severity": "Critical",
+        },
+        "database.sql": {
+            "markers": [r"CREATE TABLE|INSERT INTO|DROP TABLE"],
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "Database dump file",
+            "severity": "Critical",
+        },
+        ".DS_Store": {
+            "markers": [r"\x00\x00\x00\x01Bud1"],  # DS_Store magic bytes
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "macOS directory metadata",
+            "severity": "Low",
+            "binary": True,
+        },
+        "web.config": {
+            "markers": [r"<configuration", r"<system\.web", r"<appSettings"],
+            "anti_markers": [],
+            "description": "IIS web server configuration",
+            "severity": "High",
+        },
+        "config.php": {
+            "markers": [r"<\?php", r"\$db|define\(|DB_HOST|DB_PASSWORD"],
+            "anti_markers": [],
+            "description": "PHP configuration file",
+            "severity": "Critical",
+        },
+        "password.txt": {
+            "markers": [r"password|pass|pwd|credential|secret", r":"],
+            "anti_markers": ["<!doctype", "<html", "<head>"],
+            "description": "Password file",
+            "severity": "Critical",
+        },
+        ".htpasswd": {
+            "markers": [r"^[a-zA-Z0-9_]+:\$", r"^[a-zA-Z0-9_]+:\{"],  # user:$hash or user:{SHA}
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "Apache password file",
+            "severity": "Critical",
+        },
+        ".htaccess": {
+            "markers": [r"RewriteEngine|RewriteRule|AuthType|Deny from|Allow from|Options"],
+            "anti_markers": ["<!doctype html"],
+            "description": "Apache access configuration",
+            "severity": "Medium",
+        },
+        "id_rsa": {
+            "markers": [r"-----BEGIN.*PRIVATE KEY-----"],
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "SSH private key",
+            "severity": "Critical",
+        },
+        "credentials": {
+            "markers": [r"\[default\]|aws_access_key_id|aws_secret_access_key"],
+            "anti_markers": ["<!doctype", "<html"],
+            "description": "AWS credentials file",
+            "severity": "Critical",
+        },
+        "debug.log": {
+            "markers": [r"\d{4}-\d{2}-\d{2}|ERROR|WARN|INFO|DEBUG|Exception|Traceback|Stack trace"],
+            "anti_markers": ["<!doctype html>.*<title>"],
+            "description": "Application debug log",
+            "severity": "Medium",
+        },
+        "phpinfo.php": {
+            "markers": [r"PHP Version|phpinfo\(\)|Configuration|PHP Credits"],
+            "anti_markers": [],
+            "description": "PHP info page",
+            "severity": "Medium",
+        },
+        "swagger.json": {
+            "markers": [r'"swagger"|"openapi"|"paths"|"info"'],
+            "anti_markers": ["<!doctype html"],
+            "description": "API documentation (Swagger/OpenAPI)",
+            "severity": "Low",
+        },
+        "openapi.json": {
+            "markers": [r'"openapi"|"paths"|"components"'],
+            "anti_markers": ["<!doctype html"],
+            "description": "API documentation (OpenAPI)",
+            "severity": "Low",
+        },
+    }
+
+    # Step 1: Get baseline response for SPA catch-all detection
+    baseline_body = ""
+    baseline_size = 0
+    try:
+        baseline_resp = client.get(urljoin(base_url, "/this-path-definitely-does-not-exist-xyzzy-12345"))
+        baseline_body = baseline_resp.text[:500]
+        baseline_size = len(baseline_resp.content)
+    except Exception:
+        pass
+
+    found_count = 0
+    fp_count = 0
+
     with console.status("[cyan]Probing common paths...[/cyan]"):
         for path in paths:
             url = urljoin(base_url, path)
@@ -381,27 +512,220 @@ def _probe_common_paths(target: str, client: httpx.Client, state: ScanState):
                     if resp.status_code == 200:
                         filename = path.split("/")[-1]
 
-                        # Check if it's a sensitive file
                         is_sensitive = any(sensitive in filename for sensitive in sensitive_files)
                         is_sensitive = is_sensitive or any(sensitive in path for sensitive in sensitive_files)
 
                         if is_sensitive:
-                            finding = {
-                                "vuln_type": "sensitive_file_exposed",
-                                "url": url,
-                                "method": "GET",
-                                "param_name": "",
-                                "payload": "N/A (passive check)",
-                                "evidence": f"Sensitive file accessible: {path} ({len(resp.text)} bytes).",
-                                "severity": "High",
-                                "source": "passive-recon",
-                                "validated": True,
-                            }
-                            state.add_finding(finding)
+                            # ── CONTENT VERIFICATION (anti-false-positive) ──
+                            verification = _verify_file_content(
+                                path, resp, baseline_body, baseline_size, CONTENT_SIGNATURES
+                            )
+
+                            if verification["is_real"]:
+                                # CONFIRMED: content matches expected file type
+                                found_count += 1
+                                sev = verification.get("severity", "High")
+
+                                # Extract a safe preview (first 3 interesting lines, redact secrets)
+                                preview = _safe_content_preview(resp.text, path)
+
+                                finding = {
+                                    "vuln_type": "sensitive_file_exposed",
+                                    "url": url,
+                                    "method": "GET",
+                                    "param_name": "",
+                                    "payload": "N/A (passive check)",
+                                    "evidence": (
+                                        f"CONFIRMED: {verification['description']} accessible at {path}. "
+                                        f"Size: {len(resp.content)} bytes. "
+                                        f"Content verification: {verification['match_reason']}. "
+                                        f"Preview: {preview}"
+                                    ),
+                                    "severity": sev,
+                                    "source": "passive-recon",
+                                    "validated": True,
+                                    "details": {
+                                        "file_type": verification["description"],
+                                        "content_verified": True,
+                                        "content_size": len(resp.content),
+                                        "content_type": resp.headers.get("content-type", ""),
+                                    },
+                                }
+                                state.add_finding(finding)
+                                console.print(
+                                    f"  [bold red]CONFIRMED: {path} — {verification['description']} "
+                                    f"({sev})[/]"
+                                )
+                            else:
+                                # FALSE POSITIVE: likely SPA catch-all
+                                fp_count += 1
 
             except Exception:
-                # Connection errors, timeouts, etc. — skip
                 pass
+
+    console.print(
+        f"  [green]Path probing complete: "
+        f"{found_count} confirmed, {fp_count} false positives filtered[/]"
+    )
+
+
+def _verify_file_content(
+    path: str,
+    resp,
+    baseline_body: str,
+    baseline_size: int,
+    signatures: dict,
+) -> dict:
+    """
+    Verify that a response actually contains the expected file content,
+    not a SPA catch-all page or generic error page.
+
+    Returns: {is_real: bool, match_reason: str, description: str, severity: str}
+    """
+    body = resp.text
+    raw = resp.content
+    content_type = resp.headers.get("content-type", "").lower()
+
+    # Check 1: SPA catch-all detection — same size as baseline 404
+    # Only trigger if baseline is a real HTML page (>500 bytes) and sizes match closely
+    if baseline_size > 500 and abs(len(raw) - baseline_size) < 100:
+        return {
+            "is_real": False,
+            "match_reason": f"Same size as catch-all ({len(raw)} vs {baseline_size} bytes)",
+            "description": "",
+            "severity": "",
+        }
+
+    # Check 2: HTML page returned for non-HTML file
+    is_html = body.lstrip()[:50].lower().startswith(("<!doctype", "<html", "<head"))
+    non_html_files = {
+        ".env", ".git", ".sql", ".txt", ".log", ".key", ".pem",
+        ".htpasswd", ".htaccess", ".DS_Store", "credentials", "id_rsa",
+    }
+    expects_non_html = any(ext in path for ext in non_html_files)
+    if expects_non_html and is_html:
+        return {
+            "is_real": False,
+            "match_reason": "Server returned HTML page for a non-HTML file path (SPA catch-all)",
+            "description": "",
+            "severity": "",
+        }
+
+    # Check 3: Content signature matching
+    for file_key, sig in signatures.items():
+        if file_key not in path:
+            continue
+
+        # Check anti-markers first (things that should NOT be present)
+        has_anti = False
+        for anti in sig.get("anti_markers", []):
+            if re.search(anti, body[:500], re.I):
+                has_anti = True
+                break
+        if has_anti:
+            return {
+                "is_real": False,
+                "match_reason": f"Content contains anti-marker for {file_key} (likely SPA page)",
+                "description": "",
+                "severity": "",
+            }
+
+        # Check positive markers (things that SHOULD be present)
+        if sig.get("binary"):
+            # Binary file — check raw bytes
+            for marker in sig["markers"]:
+                try:
+                    if re.search(marker.encode(), raw):
+                        return {
+                            "is_real": True,
+                            "match_reason": f"Binary content matches {file_key} signature",
+                            "description": sig["description"],
+                            "severity": sig["severity"],
+                        }
+                except Exception:
+                    pass
+        else:
+            for marker in sig["markers"]:
+                if re.search(marker, body, re.I | re.M):
+                    return {
+                        "is_real": True,
+                        "match_reason": f"Content matches marker: {marker[:40]}",
+                        "description": sig["description"],
+                        "severity": sig["severity"],
+                    }
+
+        # Markers didn't match — not real
+        return {
+            "is_real": False,
+            "match_reason": f"Content does not match expected {file_key} format",
+            "description": "",
+            "severity": "",
+        }
+
+    # No signature defined for this file — use generic checks
+    if is_html and expects_non_html:
+        return {
+            "is_real": False,
+            "match_reason": "HTML content returned for non-HTML file (generic catch-all)",
+            "description": "",
+            "severity": "",
+        }
+
+    # If content-type matches expected type and it's not HTML, cautiously accept
+    if not is_html and len(raw) > 10:
+        return {
+            "is_real": True,
+            "match_reason": "Non-HTML content returned (no specific signature defined)",
+            "description": "Potentially sensitive file",
+            "severity": "Medium",
+        }
+
+    return {
+        "is_real": False,
+        "match_reason": "Could not verify file content authenticity",
+        "description": "",
+        "severity": "",
+    }
+
+
+def _safe_content_preview(content: str, path: str) -> str:
+    """
+    Generate a safe preview of file content for the report.
+    Redacts obvious secrets (passwords, keys) but shows structure.
+    """
+    lines = content.strip().split("\n")[:10]  # first 10 lines
+    preview_lines = []
+
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        # Redact secret values in KEY=VALUE patterns
+        m = re.match(r'^([A-Z_]+)\s*=\s*(.+)', line)
+        if m:
+            key = m.group(1)
+            val = m.group(2)
+            secret_keywords = [
+                "password", "secret", "key", "token", "credential",
+                "private", "auth", "api_key", "access_key",
+            ]
+            if any(kw in key.lower() for kw in secret_keywords):
+                preview_lines.append(f"{key}=***REDACTED***")
+            else:
+                # Show first 20 chars of non-secret values
+                preview_lines.append(f"{key}={val[:20]}{'...' if len(val) > 20 else ''}")
+        else:
+            # Non KEY=VALUE line — show truncated
+            preview_lines.append(line[:60] + ("..." if len(line) > 60 else ""))
+
+        if len(preview_lines) >= 5:
+            break
+
+    if not preview_lines:
+        return "(no readable content in first 10 lines)"
+
+    return " | ".join(preview_lines)
 
 
 def _detect_waf(target: str, client: httpx.Client, state: ScanState):

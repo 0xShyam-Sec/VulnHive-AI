@@ -150,7 +150,22 @@ class DecisionEngine:
 
             self._maybe_checkpoint()
 
-        # Phase 5: Validation
+        # Phase 5a: Deduplication BEFORE validation (validate 5 findings, not 49)
+        try:
+            from engine.deduplicator import deduplicate_findings, get_dedup_stats
+            original_count = len(self.state.findings)
+            deduped = deduplicate_findings(list(self.state.findings))
+            stats = get_dedup_stats([None] * original_count, deduped)
+            with self.state._lock:
+                self.state.findings = deduped
+            _console.print(
+                f"\n[bold]Deduplication: {original_count} → {len(deduped)} findings "
+                f"({stats['reduction_pct']}% noise reduction)[/]"
+            )
+        except Exception as exc:
+            _console.print(f"  [yellow]Deduplication error: {exc}[/yellow]")
+
+        # Phase 5b: Validation (now runs on deduplicated set — much faster)
         self.state.scan_status = "validating"
         _console.print("\n[bold yellow]Phase: Validation[/bold yellow]")
         validated_findings = list(self.state.findings)

@@ -214,22 +214,6 @@ def run_scan(
     except Exception as exc:
         _console.print(f"  [yellow]Confidence scoring error: {exc}[/yellow]")
 
-    # 10d. Deduplication & Aggregation
-    try:
-        from engine.deduplicator import deduplicate_findings, get_dedup_stats
-        original_count = len(state.findings)
-        state.findings = deduplicate_findings(state.findings)
-        stats = get_dedup_stats(
-            [None] * original_count,  # placeholder for count
-            state.findings,
-        )
-        _console.print(
-            f"  [bold]Deduplication: {original_count} → {len(state.findings)} findings "
-            f"({stats['reduction_pct']}% noise reduction)[/]"
-        )
-    except Exception as exc:
-        _console.print(f"  [yellow]Deduplication error: {exc}[/yellow]")
-
     # -----------------------------------------------------------------------
     # 11. Generate reports
     # -----------------------------------------------------------------------

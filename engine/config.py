@@ -10,7 +10,7 @@ class ScanConfig:
         # Set defaults
         self.llm_backend = "ollama"
         self.ollama_url = "http://localhost:11434/api/chat"
-        self.ollama_model = "qwen2.5:14b"
+        self.ollama_model = "deepseek-r1:14b"
         self.anthropic_model = "claude-haiku-4-5-20251001"
         self.anthropic_validator_model = "claude-sonnet-4-6"
         self.max_depth = 3

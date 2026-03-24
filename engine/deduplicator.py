@@ -179,7 +179,11 @@ def _merge_finding_group(norm_type: str, severity: str, group: list) -> dict:
     merged["severity"] = severity
     merged["evidence"] = combined_evidence
     merged["affected_endpoints"] = endpoints
-    merged["url"] = f"{len(endpoints)} endpoint(s) affected"
+    # Keep actual URL when single endpoint; show count when multiple
+    if len(endpoints) == 1:
+        merged["url"] = endpoints[0]
+    else:
+        merged["url"] = f"{len(endpoints)} endpoint(s) affected"
     merged["dedup_count"] = len(group)
     merged["dedup_original_count"] = len(group)
 

@@ -2025,6 +2025,14 @@ class ReportEngine:
                 "impact": self._get_impact_assessment(rk, f.get("severity", "Medium")),
             }
 
+            # Deduplication fields
+            affected_eps = f.get("affected_endpoints", [])
+            if affected_eps:
+                enriched["affected_endpoints"] = affected_eps
+            dedup_count = f.get("dedup_count", 0)
+            if dedup_count > 1:
+                enriched["deduplicated_from"] = dedup_count
+
             details = f.get("details")
             if isinstance(details, dict):
                 skip_keys = {"validated", "type", "evidence", "url", "payload", "reason"}

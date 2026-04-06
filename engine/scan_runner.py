@@ -22,6 +22,9 @@ def run_scan(
     cookies=None,
     llm_backend="ollama",
     aggressive=False,
+    subdomain_wordlist=None,
+    subdomain_rate_limit=0,
+    subdomain_scan_all=False,
 ) -> dict:
     """
     Execute a full penetration test scan against target.
@@ -54,6 +57,9 @@ def run_scan(
         aggressive_mode=aggressive,
         bearer_token=bearer_token,
         cookies=cookies or {},
+        subdomain_wordlist=subdomain_wordlist,
+        subdomain_rate_limit=subdomain_rate_limit,
+        subdomain_scan_all=subdomain_scan_all,
     )
 
     # -----------------------------------------------------------------------
@@ -102,20 +108,49 @@ def run_scan(
     except Exception as exc:
         _console.print(f"  [yellow]Passive recon unavailable: {exc}[/yellow]")
 
-    # 5c. JS analyzer
+    # 5b-2. WAF detection (runs early — informs payload strategy for all agents)
     try:
-        from js_analyzer import JSAnalyzer
+        from discovery.waf_detector import run_waf_detection
+        engine.register_discovery(run_waf_detection)
+        _console.print("  [dim]Registered: WAF detector (25+ fingerprints)[/dim]")
+    except Exception as exc:
+        _console.print(f"  [yellow]WAF detector unavailable: {exc}[/yellow]")
+
+    # 5b-3. WHOIS + DNS enumeration
+    try:
+        from discovery.whois_dns import run_whois_dns_recon
+        engine.register_discovery(run_whois_dns_recon)
+        _console.print("  [dim]Registered: WHOIS + DNS recon[/dim]")
+    except Exception as exc:
+        _console.print(f"  [yellow]WHOIS/DNS recon unavailable: {exc}[/yellow]")
+
+    # 5c. Deep JS crawler (replaces basic JSAnalyzer — crawls all pages for .js files)
+    try:
+        from js_analyzer import JSCrawler
 
         def _js_discovery(t, cfg, st):
-            analyzer = JSAnalyzer(t)
-            result = analyzer.run()
+            cookies = {}
+            if hasattr(st, 'session_cookies'):
+                cookies = st.session_cookies or {}
+
+            crawler = JSCrawler(
+                base_url=t,
+                cookies=cookies,
+                max_js_files=getattr(cfg, 'max_js_files', 100),
+                max_pages=getattr(cfg, 'max_crawl_pages', 50),
+                crawl_depth=getattr(cfg, 'crawl_depth', 3),
+            )
+
+            # Reuse crawl results if available on state
+            crawl_result = getattr(st, 'crawl_result', None)
+            result = crawler.run(crawl_result=crawl_result)
+            crawler.close()
 
             # Add discovered endpoints to state
             for ep_data in result.get("endpoints", []):
                 path = ep_data.get("path", "")
                 if not path:
                     continue
-                # Build absolute URL if path is relative
                 if path.startswith("http"):
                     url = path
                 else:
@@ -130,13 +165,17 @@ def run_scan(
                 with st._lock:
                     st.js_secrets.extend(secrets)
 
+            # Store JS file list for reference
+            with st._lock:
+                st.js_files_discovered = result.get("js_files", [])
+
             _console.print(
-                f"  [dim]JS analysis: {len(result.get('endpoints', []))} endpoints, "
-                f"{len(secrets)} secrets[/dim]"
+                f"  [dim]JS deep crawl: {len(result.get('endpoints', []))} hidden endpoints, "
+                f"{len(secrets)} secrets from {result.get('js_files_downloaded', 0)} JS files[/dim]"
             )
 
         engine.register_discovery(_js_discovery)
-        _console.print("  [dim]Registered: JS analyzer[/dim]")
+        _console.print("  [dim]Registered: Deep JS crawler[/dim]")
     except Exception as exc:
         _console.print(f"  [yellow]JS analyzer unavailable: {exc}[/yellow]")
 

@@ -80,7 +80,7 @@ class GraphQLAgent(BaseAgent):
         token_match = re.search(r'Bearer[:\s]+(\S+)', user_message, re.IGNORECASE)
         bearer_token = token_match.group(1) if token_match else None
 
-        headers = {'Content-Type': 'application/json', 'User-Agent': 'pentest-agent/1.0'}
+        headers = {'Content-Type': 'application/json', 'User-Agent': 'VulnHive-AI/1.0'}
         if bearer_token:
             headers['Authorization'] = f'Bearer {bearer_token}'
 

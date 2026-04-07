@@ -32,7 +32,7 @@ BANNER = r"""
 |  _ \| |/ _` |/ __| |/ /  _ \ / _ \ \/ /
 | |_) | | (_| | (__|   <| |_) | (_) >  <
 |____/|_|\__,_|\___|_|\_\____/ \___/_/\_\
-    Pentest Agent — Black-Box Multi-Agent Mode
+    VulnHive AI — Black-Box Multi-Agent Mode
 """
 
 

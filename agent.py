@@ -357,7 +357,7 @@ def _run_anthropic_agent(target_url, task, auth_status):
 
 def run_agent(target_url, task, auth_config=None, llm_backend="ollama"):
     """
-    Run the pentest agent against a target.
+    Run the VulnHive AI agent against a target.
 
     Args:
         target_url:   The target application URL

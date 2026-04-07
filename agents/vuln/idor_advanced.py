@@ -38,7 +38,7 @@ class IDORAdvancedAgent(BaseAgent):
         targets = self._parse_targets_from_message(user_message)
         console.print(f"  [cyan]IDORAdvancedAgent: testing {len(targets)} endpoints...[/]")
 
-        headers = {'User-Agent': 'pentest-agent/1.0'}
+        headers = {'User-Agent': 'VulnHive-AI/1.0'}
         if bearer_token:
             headers['Authorization'] = f'Bearer {bearer_token}'
         client = httpx.Client(timeout=15, verify=False, headers=headers)

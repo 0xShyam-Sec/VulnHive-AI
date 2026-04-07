@@ -155,7 +155,7 @@ class JWTAgent(BaseAgent):
 
         url = endpoint.url
         method = endpoint.method or "GET"
-        auth_headers = {"Authorization": f"Bearer {token}", "User-Agent": "pentest-agent/1.0"}
+        auth_headers = {"Authorization": f"Bearer {token}", "User-Agent": "VulnHive-AI/1.0"}
 
         console.print(f"  [cyan]JWTAgent: testing JWT weaknesses on {url}[/]")
 
@@ -391,7 +391,7 @@ class JWTAgent(BaseAgent):
         """Send a request with a custom Bearer token."""
         headers = {
             "Authorization": f"Bearer {token}",
-            "User-Agent": "pentest-agent/1.0",
+            "User-Agent": "VulnHive-AI/1.0",
         }
         try:
             if method.upper() == "POST":

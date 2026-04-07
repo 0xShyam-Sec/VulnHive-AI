@@ -71,7 +71,7 @@ def search_nvd(vuln_type: str) -> list[dict]:
                 "cvssV3Severity": "HIGH",          # focus on high/critical
             },
             timeout=NVD_TIMEOUT,
-            headers={"User-Agent": "pentest-agent/1.0"},
+            headers={"User-Agent": "VulnHive-AI/1.0"},
         )
         if resp.status_code != 200:
             _nvd_cache[keyword] = []

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pentest Agent v5 — CLI mode.
+VulnHive AI — CLI mode.
 
 Usage:
     python main.py --target http://localhost:8080 --auth-type form \
@@ -100,7 +100,7 @@ def main():
         f"[bold]Auth:[/] {args.auth_type}\n"
         f"[bold]Depth:[/] {args.max_depth} | Max pages: {args.max_pages}\n"
         f"[bold]Engines:[/] {' | '.join(extras) or 'none'}",
-        title="[bold blue]Pentest Agent v5",
+        title="[bold blue]VulnHive AI",
         border_style="blue",
     ))
 

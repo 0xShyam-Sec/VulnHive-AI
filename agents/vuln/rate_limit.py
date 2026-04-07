@@ -84,7 +84,7 @@ class RateLimitAgent(BaseAgent):
         findings = []
 
         # Prepare headers with auth if available
-        headers = {"User-Agent": "pentest-agent/1.0"}
+        headers = {"User-Agent": "VulnHive-AI/1.0"}
         if hasattr(config, "cookies") and config.cookies:
             headers["Cookie"] = config.cookies
         if hasattr(config, "bearer_token") and config.bearer_token:

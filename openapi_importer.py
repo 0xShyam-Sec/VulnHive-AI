@@ -57,7 +57,7 @@ class OpenAPIImporter:
                  cookies: Optional[dict] = None, timeout: int = 10):
         self.base_url = base_url.rstrip('/')
         self.timeout = timeout
-        headers = {'User-Agent': 'pentest-agent/1.0'}
+        headers = {'User-Agent': 'VulnHive-AI/1.0'}
         if bearer_token:
             headers['Authorization'] = f'Bearer {bearer_token}'
         self.client = httpx.Client(

@@ -45,7 +45,7 @@ def run_scan(
     scan_start = time.time()
     scan_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    _console.print(f"\n[bold cyan]Pentest Agent — scan started at {scan_time}[/bold cyan]")
+    _console.print(f"\n[bold cyan]VulnHive AI — scan started at {scan_time}[/bold cyan]")
     _console.print(f"  Target: {target}")
     _console.print(f"  LLM backend: {llm_backend} | Aggressive: {aggressive}")
 

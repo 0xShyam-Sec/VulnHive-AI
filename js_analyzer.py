@@ -102,7 +102,7 @@ class JSAnalyzer:
         self.max_bundles = max_bundles
         self.client = httpx.Client(
             timeout=timeout, follow_redirects=True, verify=False,
-            headers={'User-Agent': 'Mozilla/5.0 (compatible; pentest-agent/1.0)'},
+            headers={'User-Agent': 'Mozilla/5.0 (compatible; VulnHive-AI/1.0)'},
         )
 
     def run(self) -> dict:

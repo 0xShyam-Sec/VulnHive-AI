@@ -267,7 +267,7 @@ class APIVersionAgent(BaseAgent):
             return []
 
         # Prepare auth headers for the current version baseline
-        baseline_headers = {"User-Agent": "pentest-agent/1.0"}
+        baseline_headers = {"User-Agent": "VulnHive-AI/1.0"}
         if hasattr(config, "bearer_token") and config.bearer_token:
             baseline_headers["Authorization"] = f"Bearer {config.bearer_token}"
         elif hasattr(config, "get_auth_headers"):
@@ -286,7 +286,7 @@ class APIVersionAgent(BaseAgent):
                     continue
 
                 # Step 4: Test WITHOUT auth headers to detect missing authentication
-                response_without_auth = _make_request(old_url, headers={"User-Agent": "pentest-agent/1.0"})
+                response_without_auth = _make_request(old_url, headers={"User-Agent": "VulnHive-AI/1.0"})
 
                 # Determine if auth is required
                 auth_required = _is_auth_required(response_without_auth)

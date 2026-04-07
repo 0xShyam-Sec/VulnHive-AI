@@ -122,7 +122,7 @@ malicious content that gets served to other users."""
         console.print(f"  [cyan]CachePoisonAgent: testing cache poisoning on {url}[/]")
 
         # Prepare headers with auth if available
-        headers = {"User-Agent": "pentest-agent/1.0"}
+        headers = {"User-Agent": "VulnHive-AI/1.0"}
         if hasattr(config, "get_auth_headers"):
             headers.update(config.get_auth_headers())
         else:

@@ -71,7 +71,7 @@ class MassAssignmentAgent(BaseAgent):
 
         console.print(f"  [cyan]MassAssignmentAgent: testing {len(post_put_targets)} endpoints...[/]")
 
-        headers = {'Content-Type': 'application/json', 'User-Agent': 'pentest-agent/1.0'}
+        headers = {'Content-Type': 'application/json', 'User-Agent': 'VulnHive-AI/1.0'}
         if bearer_token:
             headers['Authorization'] = f'Bearer {bearer_token}'
         client = httpx.Client(timeout=15, verify=False, headers=headers)

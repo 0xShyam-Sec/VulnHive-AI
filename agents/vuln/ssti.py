@@ -52,7 +52,7 @@ Rules:
         findings = []
 
         # Build headers from config
-        headers = {"User-Agent": "pentest-agent/1.0"}
+        headers = {"User-Agent": "VulnHive-AI/1.0"}
         if config.cookies:
             headers["Cookie"] = config.cookies
         if hasattr(config, 'auth_headers') and config.auth_headers:

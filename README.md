@@ -385,74 +385,129 @@ CLI (main.py)
 
 ## Project Structure
 
-```
-VulnHive-AI/
-|-- main.py                    # CLI entry point
-|-- pipeline.py                # Scan mode orchestration
-|-- agent.py                   # Single-agent ReAct loop
-|-- scanner.py                 # Core scanning logic
-|-- crawler.py                 # BFS web crawler
-|-- browser.py                 # Playwright browser automation
-|-- js_analyzer.py             # Deep JS crawler + secret scanner
-|-- auth.py                    # Authentication handlers
-|-- oauth_handler.py           # OAuth 2.0 flows
-|-- session_manager.py         # Session persistence + auto-reauth
-|-- autodiscover.py            # Black-box target reconnaissance
-|-- validator.py               # Finding re-validation
-|-- confidence_scorer.py       # Finding confidence scoring
-|-- enrichment.py              # CVSS scoring + remediation advice
-|-- payload_engine.py          # Adaptive WAF bypass payloads
-|-- exploit_chain.py           # Multi-step exploit chains
-|-- report_engine.py           # HTML + JSON report generation
-|-- api_scanner.py             # API-focused scanning
-|-- openapi_importer.py        # Swagger/OpenAPI spec import
-|-- traffic_recorder.py        # HTTP traffic recording
-|-- tools.py                   # Tool schemas for agent tool-use
-|-- blackbox.py                # Black-box multi-agent mode
-|
-|-- engine/
-|   |-- config.py              # Centralized scan configuration
-|   |-- scan_state.py          # Thread-safe shared state
-|   |-- scan_runner.py         # Unified scan runner
-|   |-- decision_engine.py     # What to test + priority
-|   |-- agent_registry.py      # Dynamic agent registration
-|   |-- priority_scorer.py     # Endpoint priority scoring
-|   |-- reactive_rules.py      # Event-driven reactive rules
-|   +-- deduplicator.py        # Finding deduplication
-|
-|-- agents/
-|   |-- base.py                # Base agent (Ollama + Anthropic)
-|   |-- orchestrator.py        # Multi-agent coordinator
-|   |-- validator.py           # Validation agent
-|   |-- recon.py               # Recon agent
-|   |-- chain.py               # Exploit chaining agent
-|   +-- vuln/                  # 24 vulnerability agents
-|       |-- sqli.py, xss.py, csrf.py, ssrf.py, idor.py, ...
-|       +-- subdomain.py       # 1065-line subdomain agent
-|
-|-- discovery/
-|   |-- passive_recon.py       # Headers, cookies, JWT, path probes
-|   |-- waf_detector.py        # 25 WAF fingerprints
-|   |-- whois_dns.py           # WHOIS + DNS + SPF/DMARC
-|   |-- playwright_crawler.py  # Headless browser crawler
-|   +-- api_schema_inference.py
-|
-|-- exploit/
-|   |-- filter_detector.py     # Per-parameter filter analysis
-|   |-- context_analyzer.py    # Injection context analysis
-|   |-- callback_server.py     # OOB callback for blind vulns
-|   +-- payload_library/
-|       |-- sqli.py            # SQL injection payloads
-|       |-- xss.py             # XSS payloads
-|       |-- cmdi.py            # Command injection payloads
-|       +-- ssti.py            # Template injection payloads
-|
-+-- chain/
-    |-- graph_builder.py       # Attack graph construction
-    |-- chain_rules.py         # Chaining rules
-    |-- chain_verifier.py      # End-to-end chain verification
-    +-- chain_report.py        # Chain-specific reporting
-```
+<details>                                                                                                                       
+  <summary><strong>Root Files</strong> — CLI, scanning, crawling, auth, reporting (22 files)</summary>
+                                                                                                                                  
+  | File | Purpose |
+  |------|---------|                                                                                                              
+  | `main.py` | CLI entry point — parses all flags, builds auth config, runs scan |
+  | `pipeline.py` | Scan mode orchestration — systematic, agent, browser, API, multi-agent, full |                                
+  | `agent.py` | Single-agent ReAct loop (Reason → Act → Observe) |
+  | `scanner.py` | Core scanning logic |                                                                                          
+  | `crawler.py` | BFS web crawler — forms, params, links, tech detection |
+  | `browser.py` | Playwright browser automation for JS-heavy apps |                                                              
+  | `js_analyzer.py` | Deep JS crawler — source maps, webpack chunks, 14 route patterns, secret scanner |
+  | `auth.py` | Authentication handlers — form, cookie, basic, bearer |                                                           
+  | `oauth_handler.py` | OAuth 2.0 authorization flows |
+  | `session_manager.py` | Session persistence + automatic re-authentication |                                                    
+  | `autodiscover.py` | Black-box target recon — login pages, tech stack, robots.txt, sitemap |                                   
+  | `validator.py` | Re-validates findings to eliminate false positives |
+  | `confidence_scorer.py` | Scores finding confidence levels |                                                                   
+  | `enrichment.py` | CVSS scoring + remediation advice |
+  | `payload_engine.py` | Adaptive WAF bypass — mutates blocked payloads automatically |                                          
+  | `exploit_chain.py` | Multi-step exploit chain builder |
+  | `report_engine.py` | HTML + JSON professional report generation |                                                             
+  | `api_scanner.py` | API-focused scanning (REST + GraphQL) |
+  | `openapi_importer.py` | Swagger/OpenAPI spec import |                                                                         
+  | `traffic_recorder.py` | Records all HTTP traffic during scan |                                                                
+  | `tools.py` | Tool schemas and dispatch for agent tool-use |
+  | `blackbox.py` | Black-box multi-agent mode |                                                                                  
+                                                                                                                                  
+  </details>
+                                                                                                                                  
+  <details>       
+  <summary><strong>engine/</strong> — Scan Engine Core (8 files)</summary>
+
+  | File | Purpose |
+  |------|---------|
+  | `config.py` | Centralized scan configuration (LLM, rate limits, auth, cookies) |
+  | `scan_state.py` | Thread-safe shared state (endpoints, findings, WAF info, lead queue) |                                      
+  | `scan_runner.py` | Unified scan runner — ties discovery, agents, validation, chains, reports |
+  | `decision_engine.py` | Picks which agent tests which endpoint + priority |                                                    
+  | `agent_registry.py` | Dynamic agent registration and dispatch |
+  | `priority_scorer.py` | Scores endpoints by attack value |                                                                     
+  | `reactive_rules.py` | Event-driven rules (finding X triggers agent Y) |
+  | `deduplicator.py` | Deduplicates + aggregates findings (runs before validation — 90% speedup) |                               
+   
+  </details>                                                                                                                      
+                  
+  <details>
+  <summary><strong>agents/</strong> — 24 Vulnerability Agents + orchestration (29 files)</summary>
+                                                                                                                                  
+  | File | Purpose |
+  |------|---------|                                                                                                              
+  | `base.py` | Base agent — supports Ollama + Anthropic backends |
+  | `orchestrator.py` | Multi-agent coordinator — runs discovery then dispatches vuln agents |                                    
+  | `validator.py` | Validation agent |
+  | `recon.py` | Reconnaissance agent |                                                                                           
+  | `chain.py` | Exploit chaining agent |
+  | `vuln/sqli.py` | SQL injection (error, blind, time-based, UNION) |                                                            
+  | `vuln/xss.py` | Cross-site scripting (reflected, stored, DOM) |
+  | `vuln/csrf.py` | Cross-site request forgery |                                                                                 
+  | `vuln/ssrf.py` | Server-side request forgery |
+  | `vuln/idor.py` | Insecure direct object reference |                                                                           
+  | `vuln/idor_advanced.py` | Complex IDOR with UUID/hash guessing |
+  | `vuln/cmdi.py` | OS command injection |                                                                                       
+  | `vuln/path_traversal.py` | LFI/RFI directory traversal |
+  | `vuln/open_redirect.py` | Unvalidated redirects |                                                                             
+  | `vuln/mass_assignment.py` | Parameter binding abuse |                                                                         
+  | `vuln/graphql.py` | GraphQL introspection, batching, depth attacks |
+  | `vuln/headers.py` | Security header misconfigurations |                                                                       
+  | `vuln/sensitive_data.py` | Exposed files, info leakage |                                                                      
+  | `vuln/ssti.py` | Server-side template injection |
+  | `vuln/xxe.py` | XML external entity injection |                                                                               
+  | `vuln/jwt.py` | JWT alg=none, key confusion, weak signing |                                                                   
+  | `vuln/http_smuggling.py` | CL/TE request smuggling |
+  | `vuln/cache_poison.py` | Web cache poisoning |                                                                                
+  | `vuln/file_upload.py` | Unrestricted file upload |                                                                            
+  | `vuln/websocket.py` | WebSocket injection/hijacking |
+  | `vuln/rate_limit.py` | Missing rate limiting |                                                                                
+  | `vuln/auth_bypass.py` | Authentication bypass |
+  | `vuln/api_version.py` | Old API versions with missing patches |                                                               
+  | `vuln/business_logic.py` | Logic flaws (price manipulation, etc.) |
+  | `vuln/subdomain.py` | Subdomain enum — OSINT, async DNS, 34 takeover fingerprints (1065 lines) |                              
+                                                                                                                                  
+  </details>
+                                                                                                                                  
+  <details>       
+  <summary><strong>discovery/</strong> — Reconnaissance Modules (5 files)</summary>
+
+  | File | Purpose |                                                                                                              
+  |------|---------|
+  | `passive_recon.py` | Header/cookie/JWT analysis, 40+ path probes, content verification |                                      
+  | `waf_detector.py` | 25 WAF fingerprints + bypass strategy mapping |
+  | `whois_dns.py` | WHOIS + DNS (A/AAAA/CNAME/MX/NS/TXT/SOA/SRV/CAA) + SPF/DMARC + TXT tokens |
+  | `playwright_crawler.py` | Headless browser crawler for SPAs |                                                                 
+  | `api_schema_inference.py` | Infers API schemas from responses |                                                               
+                                                                                                                                  
+  </details>                                                                                                                      
+                  
+  <details>
+  <summary><strong>exploit/</strong> — Exploit Engine + Payload Libraries (7 files)</summary>
+                                                                                                                                  
+  | File | Purpose |
+  |------|---------|                                                                                                              
+  | `filter_detector.py` | Per-parameter character analysis for bypass selection |
+  | `context_analyzer.py` | Analyzes injection context (HTML attr, JS string, SQL query) |
+  | `callback_server.py` | Out-of-band callback server for blind vulnerabilities |                                                
+  | `payload_library/sqli.py` | SQL injection payloads (error, blind, UNION, WAF bypass) |
+  | `payload_library/xss.py` | XSS payloads (tag injection, event handlers, polyglots) |                                          
+  | `payload_library/cmdi.py` | Command injection payloads (Unix/Windows, blind, bypass) |
+  | `payload_library/ssti.py` | SSTI payloads (Jinja2, Twig, Freemarker, Velocity, Mako) |                                        
+                                                                                                                                  
+  </details>
+                                                                                                                                  
+  <details>       
+  <summary><strong>chain/</strong> — Exploit Chain Engine (4 files)</summary>
+                                                                                                                                  
+  | File | Purpose |
+  |------|---------|                                                                                                              
+  | `graph_builder.py` | Builds attack graph from individual findings |
+  | `chain_rules.py` | Rules for combining vulns into multi-step chains |
+  | `chain_verifier.py` | Verifies each chain end-to-end to confirm it works |
+  | `chain_report.py` | Chain-specific reporting |                                                                                
+   
+  </details>
 
 ---
 

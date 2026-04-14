@@ -66,66 +66,20 @@ This single command will:
 
 ## How It Works (The Pipeline)
 
-```
-                         +------------------+
-                         |    You give it   |
-                         |     a URL        |
-                         +--------+---------+
-                                  |
-                    +-------------v--------------+
-                    |     PHASE 1: DISCOVERY      |
-                    |                             |
-                    |  Web Crawler (BFS)          |
-                    |  Playwright Browser Crawler  |
-                    |  Deep JS Crawler             |
-                    |  Passive Recon (headers,     |
-                    |    cookies, paths)           |
-                    |  WAF Detection (25 WAFs)     |
-                    |  WHOIS + DNS Enumeration     |
-                    |  Subdomain Enumeration       |
-                    +-------------+---------------+
-                                  |
-                    +-------------v--------------+
-                    |   PHASE 2: ANALYSIS         |
-                    |                             |
-                    |  Decision Engine picks      |
-                    |  what to test based on      |
-                    |  what was discovered         |
-                    |                             |
-                    |  Priority scoring ranks     |
-                    |  high-value targets first    |
-                    +-------------+---------------+
-                                  |
-                    +-------------v--------------+
-                    |   PHASE 3: ATTACK           |
-                    |                             |
-                    |  24 vulnerability agents    |
-                    |  run in parallel, each      |
-                    |  testing their specialty    |
-                    |                             |
-                    |  Adaptive payloads auto-    |
-                    |  bypass detected WAFs       |
-                    +-------------+---------------+
-                                  |
-                    +-------------v--------------+
-                    |   PHASE 4: VALIDATION       |
-                    |                             |
-                    |  Re-test each finding       |
-                    |  Deduplication engine        |
-                    |  Confidence scoring          |
-                    |  Eliminate false positives   |
-                    +-------------+---------------+
-                                  |
-                    +-------------v--------------+
-                    |   PHASE 5: CHAIN + REPORT   |
-                    |                             |
-                    |  Exploit chain engine        |
-                    |  builds multi-step attacks  |
-                    |                             |
-                    |  HTML + JSON report with    |
-                    |  evidence and remediation   |
-                    +----------------------------+
-```
+ flowchart LR    
+      A["URL"] --> B["Discovery"] --> C["Analysis"] --> D["Attack"] --> E["Validation"] --> F["Report"]                           
+                                                                                                                                  
+      B --- B1["Web Crawler"]
+      B --- B2["JS Crawler"]                                                                                                      
+      B --- B3["WAF Detection"]
+      B --- B4["WHOIS/DNS"]                                                                                                       
+      B --- B5["Subdomain Enum"]
+                                                                                                                                  
+      D --- D1["24 Vuln Agents"]                                                                                                  
+      D --- D2["Adaptive Payloads"]
+                                                                                                                                  
+      F --- F1["HTML Report"]
+      F --- F2["JSON Report"]
 
 ---
 

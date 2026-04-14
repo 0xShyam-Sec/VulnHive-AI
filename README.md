@@ -206,22 +206,6 @@ python main.py --target http://localhost:8080 --auth-type form \
 | `--bearer-token TOKEN` | Bearer token (for bearer/API auth) |
 | `--success-indicator TEXT` | Text that confirms login worked |
 
-### Crawler Settings
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--max-depth N` | How many links deep to crawl | `3` |
-| `--max-pages N` | Maximum pages to crawl | `100` |
-| `--no-headless` | Show the browser window during testing | Hidden |
-
-### Subdomain Enumeration
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--wordlist FILE` | Custom wordlist file (SecLists compatible) | Built-in 360 words |
-| `--rate-limit N` | Max requests per second (0 = unlimited) | `0` |
-| `--scan-all` | Deep-scan ALL alive subdomains in parallel | First only |
-
 ### Engines
 
 | Flag | Description |

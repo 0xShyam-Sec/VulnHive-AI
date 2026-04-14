@@ -66,6 +66,7 @@ This single command will:
 
 ## How It Works (The Pipeline)
 
+ ```mermaid
  flowchart LR    
       A["URL"] --> B["Discovery"] --> C["Analysis"] --> D["Attack"] --> E["Validation"] --> F["Report"]                           
                                                                                                                                   
@@ -80,7 +81,7 @@ This single command will:
                                                                                                                                   
       F --- F1["HTML Report"]
       F --- F2["JSON Report"]
-
+```
 ---
 
 ## Quick Start

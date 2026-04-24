@@ -1,3 +1,7 @@
+<p align="center">                                                                                                              
+    <img src="./assets/banner.png" alt="VulnHive AI Banner" width="100%">
+  </p> 
+
 # VulnHive AI
 
 An AI-powered, fully automated penetration testing engine. Give it a URL — it crawls the website, discovers every page and form, tests for 24 types of security vulnerabilities, validates what it finds, chains exploits together, and generates a professional report. All without human intervention.

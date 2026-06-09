@@ -12,6 +12,8 @@ Usage:
     python main.py --target http://localhost:8080 --mode full --adaptive --report-dir ./reports
 """
 
+__version__ = "2.0.0"
+
 import argparse
 import json
 import sys
@@ -35,12 +37,12 @@ def main():
     )
 
     # Target
-    parser.add_argument("--target", required=True, help="Base URL of the target")
+    parser.add_argument("--target", help="Base URL of the target (required unless --dashboard)")
     parser.add_argument("--task", default=None, help="Specific task (default: full scan)")
     parser.add_argument("--max-iterations", type=int, default=25, help="Max agent iterations")
     parser.add_argument("--model", default=None, help="Ollama model (default: qwen2.5:14b)")
-    parser.add_argument("--llm", choices=["ollama", "anthropic"], default="ollama",
-                        help="LLM backend for agent mode: ollama (default, free/local) or anthropic (Claude API)")
+    parser.add_argument("--llm", choices=["ollama", "groq", "gemini", "anthropic"], default="ollama",
+                        help="LLM backend: ollama (default, free/local), groq (free API), gemini (free API), anthropic (paid)")
 
     # Scan mode
     parser.add_argument("--mode", choices=["systematic", "agent", "browser", "api", "full", "multi-agent"],
@@ -76,11 +78,27 @@ def main():
     parser.add_argument("--scan-all", action="store_true",
                         help="Deep-scan ALL alive subdomain hosts in parallel (default: first only)")
 
+    # Nmap + Nuclei
+    parser.add_argument("--nmap", choices=["quick", "default", "full", "vuln", "off"], default="default",
+                        help="Nmap scan type (default: default, off to disable)")
+    parser.add_argument("--nuclei", choices=["quick", "default", "full", "cve", "off"], default="default",
+                        help="Nuclei scan profile (default: default, off to disable)")
+
+    # Dashboard
+    parser.add_argument("--dashboard", action="store_true", help="Launch web dashboard on http://localhost:5000")
+    parser.add_argument("--port", type=int, default=5000, help="Dashboard port (default: 5000)")
+
     # Engines
     parser.add_argument("--exploit-chains", action="store_true", help="Run exploit chain engine")
     parser.add_argument("--adaptive", action="store_true", help="Use adaptive payload engine (WAF bypass)")
 
     args = parser.parse_args()
+
+    # ── Dashboard mode ────────────────────────────────────────────
+    if args.dashboard:
+        from dashboard.app import start_dashboard
+        start_dashboard(port=args.port)
+        return
 
     # ── Build auth config ─────────────────────────────────────────
     auth_config = _build_auth_config(args)

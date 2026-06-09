@@ -13,7 +13,6 @@ import io
 import json
 import os
 import shutil
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -379,35 +378,40 @@ def export_csv(scan_id):
 
 
 @app.route("/scans/<int:scan_id>/export/pdf")
-def export_pdf(scan_id):
-    """Generate a printable HTML, render to PDF with headless Chrome."""
-    scan = db.get_scan(scan_id)
-    if not scan:
-        abort(404)
-    findings = db.get_findings(scan_id)
-    html = render_template("report_pdf.html", scan=scan, findings=findings,
-                            recon=db.get_recon(scan_id),
-                            generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    out_dir = os.path.join(_ROOT, "reports", "pdf")
-    os.makedirs(out_dir, exist_ok=True)
-    html_path = os.path.join(out_dir, f"scan_{scan_id}.html")
-    pdf_path = os.path.join(out_dir, f"scan_{scan_id}.pdf")
-    with open(html_path, "w") as fp:
-        fp.write(html)
+def export_pdf(scan_id: int):
+    from pathlib import Path
+    from dashboard.pdf import render_pdf
+    from dashboard import repository, db as _db
 
-    chrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    if not os.path.exists(chrome):
-        return jsonify({"error": "Chrome required for PDF generation"}), 500
-    subprocess.run(
-        [chrome, "--headless", "--disable-gpu", "--no-pdf-header-footer",
-         f"--print-to-pdf={pdf_path}", f"file://{html_path}"],
-        capture_output=True, timeout=60,
-    )
-    if not os.path.exists(pdf_path):
-        return jsonify({"error": "PDF generation failed"}), 500
-    return send_file(pdf_path, as_attachment=True,
-                     download_name=f"vulnhive_scan_{scan_id}.pdf",
-                     mimetype="application/pdf")
+    scan = _db.get_scan(scan_id)
+    if scan is None:
+        abort(404)
+
+    db_path = Path(_db.DB_PATH)
+    findings = repository.list_findings_for_scan(db_path, scan_id)
+
+    # Build primary instance dict per finding (for the card preview in the report).
+    primaries = {}
+    for f in findings:
+        ins = repository.list_instances_for_finding(db_path, f.id)
+        primaries[f.id] = (ins[0].model_dump() if ins else {})
+
+    # Render the report HTML. If a template named "report_pdf.html" exists, use it;
+    # otherwise fall back to scan_detail.html.
+    try:
+        html = render_template("report_pdf.html",
+                               scan=scan, findings=findings, primaries=primaries)
+    except Exception:
+        html = render_template("scan_detail.html",
+                               scan=scan, findings=findings, primaries=primaries,
+                               producer_names=[], errors=[])
+
+    out_dir = Path(_db.DB_PATH).parent.parent / "reports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"scan_{scan_id}.pdf"
+    render_pdf(html, out)
+    return send_file(out, mimetype="application/pdf",
+                     as_attachment=True, download_name=f"vulnhive_scan_{scan_id}.pdf")
 
 
 # ─── Health check ────────────────────────────────────────────────────────

@@ -183,84 +183,41 @@ def run_api(target, session, bearer_token=None):
 
 
 def run_multi_agent(target, auth_config=None, llm_backend="ollama"):
-    """Run parallel multi-agent scan using Anthropic API (10 specialist agents simultaneously)."""
+    """CLI shim: delegate to the engine runner with the multi-agent producer set.
+
+    Maintains the legacy return shape: list[dict] (one dict per finding).
+    """
     import asyncio
-    import os
+    from engine.runner import run_scan
+    from engine.producers.registry import build_producers
+    from engine.logging_setup import configure_logging
+    from engine.finding_model import to_legacy_dict, FindingInstance
 
-    console.print(f"\n[bold green]{'='*60}[/]")
-    mode = "PARALLEL" if llm_backend == "anthropic" else "SEQUENTIAL"
-    console.print(f"[bold green]MULTI-AGENT {mode} SCAN ({llm_backend.upper()})[/]")
-    console.print(f"[bold green]10 specialist agents — {mode.lower()}[/]")
-    console.print(f"[bold green]{'='*60}[/]")
+    configure_logging(scan_id=None, log_dir=None, redis_client=None)
+    producers = build_producers("multi-agent")
+    result = asyncio.run(run_scan(
+        scan_id=0,
+        target=target,
+        producers=producers,
+        db_path=None,
+        auth_config=auth_config or {},
+        llm_backend=llm_backend,
+    ))
 
-    if llm_backend == "anthropic" and not os.environ.get("ANTHROPIC_API_KEY"):
-        console.print("[bold red]ANTHROPIC_API_KEY not set. Skipping multi-agent scan.[/]")
-        console.print("[dim]Set it with: export ANTHROPIC_API_KEY=sk-ant-...[/]")
-        return []
-
-    if llm_backend == "ollama":
-        try:
-            import httpx
-            httpx.get("http://localhost:11434/api/tags", timeout=5)
-        except Exception:
-            console.print("[bold red]Ollama not running. Start it with: ollama serve[/]")
-            return []
-
-    from agents.orchestrator import run_multi_agent_scan
-    from agents.chain import ChainAnalyzer
-
-    auth_status = (
-        "You are authenticated. Session cookies are auto-attached to all requests."
-        if auth_config else
-        "Not authenticated. If the target requires login, use the authenticate tool first."
-    )
-
-    # Authenticate upfront if config provided
-    if auth_config:
-        from tools import authenticate
-        console.print(f"  [cyan]Authenticating ({auth_config.get('auth_type', 'form')})...[/]")
-        result = authenticate(**auth_config)
-        if result.get("success"):
-            console.print(f"  [green]Auth OK[/] — {result['message']}")
-        else:
-            console.print(f"  [yellow]Auth failed — scanning unauthenticated[/]")
-
-    findings = asyncio.run(run_multi_agent_scan(target, auth_status, llm_backend=llm_backend))
-
-    # CVE + ExploitDB enrichment
-    if findings:
-        console.print("\n[bold]CVE & Exploit Enrichment (NVD + ExploitDB)...[/]")
-        try:
-            from enrichment import enrich_findings as _enrich
-            findings = _enrich(findings, verbose=True)
-            enriched_with_cve = sum(1 for f in findings if f.get("cve_refs"))
-            console.print(f"  [green]Enriched {enriched_with_cve}/{len(findings)} findings with CVE data[/]")
-        except Exception as e:
-            console.print(f"  [yellow]Enrichment skipped: {e}[/]")
-
-    # Exploit chain analysis (Anthropic only — needs reasoning model)
-    if findings and llm_backend == "anthropic":
-        console.print("\n[bold]Analyzing exploit chains...[/]")
-        chains = ChainAnalyzer().analyze(findings)
-        if chains:
-            console.print(f"  [bold red]{len(chains)} exploit chain(s) identified:[/]")
-            for c in chains:
-                console.print(f"    [red]▶[/] [{c.get('severity','?')}] {c.get('name','?')}")
-                console.print(f"      {c.get('impact','')}")
-
-    return [
-        {
-            "source": "multi-agent",
-            "vuln_type": f.get("type", "Unknown"),
-            "url": f.get("url", ""),
-            "param_name": f.get("param_name", ""),
-            "method": f.get("method", "GET"),
-            "payload": str(f.get("payload", "")),
-            "evidence": str(f.get("evidence", "")),
-            "severity": f.get("severity", "Medium"),
-        }
-        for f in findings
-    ]
+    out: list[dict] = []
+    for f in result["findings"]:
+        payload = f.references_json.get("_primary_instance", {})
+        inst = FindingInstance(
+            finding_id=f.id,
+            url=payload.get("url", ""),
+            method=payload.get("method", "GET"),
+            param_name=payload.get("param_name"),
+            payload=payload.get("payload"),
+            evidence_raw=payload.get("evidence_raw", ""),
+            source_tool=payload.get("source_tool", "unknown"),
+        )
+        out.append(to_legacy_dict(f, inst))
+    return out
 
 
 def run_exploit_chains(target, findings, session):

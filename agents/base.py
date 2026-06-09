@@ -1,8 +1,11 @@
 """
-BaseAgent — shared agent loop supporting both Anthropic API and Ollama backends.
+BaseAgent — shared agent loop supporting multiple LLM backends.
 
-- Anthropic: native tool_use blocks, parallel-safe
-- Ollama: text-based tool calling with regex parser, sequential only
+Supported backends:
+- ollama: Local LLM via Ollama (free, default)
+- groq: Groq API — ultra-fast inference (free tier)
+- gemini: Google Gemini API (free tier)
+- anthropic: Anthropic Claude API (paid)
 """
 
 import json
@@ -15,20 +18,72 @@ from rich.console import Console
 console = Console()
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
-OLLAMA_MODEL = "deepseek-r1:14b"
+OLLAMA_MODEL = "qwen3:14b"
+OLLAMA_MODEL_FALLBACK = "deepseek-r1:14b"
 ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+GROQ_MODEL = "llama-3.1-8b-instant"
+GEMINI_MODEL = "gemini-2.0-flash"
+
+
+def _load_env():
+    """Load .env file into os.environ if python-dotenv is available."""
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        # Manual fallback
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+        if os.path.isfile(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        key, val = line.split("=", 1)
+                        os.environ.setdefault(key.strip(), val.strip())
 
 
 class BaseAgent:
     model = ANTHROPIC_MODEL
     ollama_model = OLLAMA_MODEL
+    groq_model = GROQ_MODEL
+    gemini_model = GEMINI_MODEL
     max_iterations = 15
     system_prompt = ""
     allowed_tools = []
     agent_name = "BaseAgent"
 
+    # If True, look up curated bug-bounty knowledge from skills/ and inject
+    # it into the system prompt. Each subclass should set `vuln_type` to enable.
+    inject_skill = True
+    skill_name = None   # explicit override; if None, looked up by vuln_type
+
+    def _resolve_skill_addendum(self) -> str:
+        """Resolve the curated knowledge addendum for this agent (cached)."""
+        if not self.inject_skill:
+            return ""
+        try:
+            import sys, os
+            # Make project root importable
+            root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            if root not in sys.path:
+                sys.path.insert(0, root)
+            from skill_loader import skill_for_agent, load_skill, build_prompt_addendum
+            # Explicit skill_name takes priority; else use vuln_type
+            body = None
+            if self.skill_name:
+                body = load_skill(self.skill_name)
+            if not body:
+                vt = getattr(self, "vuln_type", None) or self.agent_name
+                body = skill_for_agent(vt)
+            return build_prompt_addendum(body) if body else ""
+        except Exception as e:
+            from engine.logging_setup import get_logger
+            get_logger().warning("skill_load_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
+            return ""
+
     def __init__(self, llm_backend="ollama"):
         self.llm_backend = llm_backend
+        _load_env()
 
         if llm_backend == "anthropic":
             try:
@@ -40,10 +95,50 @@ class BaseAgent:
             if not api_key:
                 console.print("[bold red]ANTHROPIC_API_KEY not set.[/]")
                 sys.exit(1)
-            import anthropic
             self.client = anthropic.Anthropic(api_key=api_key)
 
+        elif llm_backend == "groq":
+            try:
+                from groq import Groq
+            except ImportError:
+                console.print("[bold red]groq not installed. Run: pip install groq[/]")
+                sys.exit(1)
+            api_key = os.environ.get("GROQ_API_KEY")
+            if not api_key:
+                console.print("[bold red]GROQ_API_KEY not set in .env[/]")
+                sys.exit(1)
+            self.groq_client = Groq(api_key=api_key)
+
+        elif llm_backend == "gemini":
+            try:
+                from google import genai
+            except ImportError:
+                console.print("[bold red]google-genai not installed. Run: pip install google-genai[/]")
+                sys.exit(1)
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                console.print("[bold red]GEMINI_API_KEY not set in .env[/]")
+                sys.exit(1)
+            self.gemini_client = genai.Client(api_key=api_key)
+
         self._tools = self._build_tool_schemas()
+
+        # Inject curated bug-bounty knowledge (from skills/) into the system prompt.
+        # One-shot: happens at agent init so all backends (anthropic/groq/gemini/
+        # ollama) pick it up automatically.
+        addendum = self._resolve_skill_addendum()
+        if addendum:
+            # Append once — the system_prompt is a class attribute, so we shadow
+            # it on the instance to avoid polluting other agent instances.
+            self.system_prompt = (self.system_prompt or "") + addendum
+            try:
+                console.print(
+                    f"  [dim]{self.agent_name}: loaded curated skill "
+                    f"(+{len(addendum)} chars of disclosed-report knowledge)[/]"
+                )
+            except Exception as e:
+                from engine.logging_setup import get_logger
+                get_logger().warning("agent_console_print_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
 
     def _build_tool_schemas(self):
         from tools import TOOL_SCHEMAS
@@ -68,6 +163,10 @@ class BaseAgent:
     def _run_sync(self, user_message: str) -> list:
         if self.llm_backend == "anthropic":
             return self._run_anthropic(user_message)
+        elif self.llm_backend == "groq":
+            return self._run_groq(user_message)
+        elif self.llm_backend == "gemini":
+            return self._run_gemini(user_message)
         else:
             return self._run_ollama_direct(user_message)
 
@@ -95,8 +194,9 @@ class BaseAgent:
             try:
                 from validator import _reset_client
                 _reset_client()
-            except Exception:
-                pass
+            except Exception as e:
+                from engine.logging_setup import get_logger
+                get_logger().warning("agent_client_reset_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
 
             extra_params = {}
             # Common submit buttons needed for form-based endpoints
@@ -119,7 +219,8 @@ class BaseAgent:
                         f"@ {t['param']}[/]"
                     )
             except Exception as e:
-                pass  # silently skip failed checks
+                from engine.logging_setup import get_logger
+                get_logger().warning("agent_validation_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
 
         return findings
 
@@ -262,6 +363,119 @@ class BaseAgent:
                     continue
         return None, None
 
+    # ── Groq backend ───────────────────────────────────────────────
+
+    def _run_groq(self, user_message: str) -> list:
+        """
+        Groq mode — uses OpenAI-compatible chat API with tool calling.
+        Ultra-fast inference (840 tokens/sec on Llama 3.1 8B).
+        """
+        vuln_type = getattr(self, "vuln_type", None)
+        if vuln_type:
+            return self._run_ollama_direct(user_message)  # deterministic path
+
+        tool_desc = self._build_ollama_tool_desc()
+        system = self.system_prompt + f"\n\n## Tools Available\n{tool_desc}\n\n" + OLLAMA_TOOL_FORMAT
+
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_message},
+        ]
+        findings = []
+        max_iter = min(self.max_iterations, 10)
+
+        for _ in range(max_iter):
+            try:
+                resp = self.groq_client.chat.completions.create(
+                    model=self.groq_model,
+                    messages=messages,
+                    max_tokens=2048,
+                    temperature=0.1,
+                )
+                response_text = resp.choices[0].message.content or ""
+            except Exception as e:
+                console.print(f"  [red]{self.agent_name} Groq error: {e}[/]")
+                break
+
+            if "DONE" in response_text.upper() or "NO MORE" in response_text.upper():
+                break
+
+            tool_name, tool_args = self._parse_tool_call(response_text)
+            if not tool_name:
+                break
+
+            result = self._execute_tool(tool_name, tool_args)
+
+            if tool_name == "validate_finding" and result.get("validated"):
+                findings.append(result)
+                console.print(
+                    f"  [bold red][{self.agent_name}] CONFIRMED: {result.get('type')}[/]"
+                )
+
+            result_str = json.dumps(result, default=str)[:2000]
+            messages.append({"role": "assistant", "content": response_text})
+            messages.append({
+                "role": "user",
+                "content": f"Tool result for {tool_name}:\n{result_str}\n\nContinue testing. Write DONE when finished.",
+            })
+
+        return findings
+
+    # ── Gemini backend ───────────────────────────────────────────
+
+    def _run_gemini(self, user_message: str) -> list:
+        """
+        Gemini mode — uses Google Gemini API.
+        Free tier: 15 requests/min.
+        """
+        vuln_type = getattr(self, "vuln_type", None)
+        if vuln_type:
+            return self._run_ollama_direct(user_message)  # deterministic path
+
+        tool_desc = self._build_ollama_tool_desc()
+        system = self.system_prompt + f"\n\n## Tools Available\n{tool_desc}\n\n" + OLLAMA_TOOL_FORMAT
+
+        full_prompt = f"{system}\n\nUser: {user_message}"
+        findings = []
+        max_iter = min(self.max_iterations, 10)
+
+        messages_context = full_prompt
+
+        for _ in range(max_iter):
+            try:
+                resp = self.gemini_client.models.generate_content(
+                    model=self.gemini_model,
+                    contents=messages_context,
+                )
+                response_text = resp.text or ""
+            except Exception as e:
+                console.print(f"  [red]{self.agent_name} Gemini error: {e}[/]")
+                break
+
+            if "DONE" in response_text.upper() or "NO MORE" in response_text.upper():
+                break
+
+            tool_name, tool_args = self._parse_tool_call(response_text)
+            if not tool_name:
+                break
+
+            result = self._execute_tool(tool_name, tool_args)
+
+            if tool_name == "validate_finding" and result.get("validated"):
+                findings.append(result)
+                console.print(
+                    f"  [bold red][{self.agent_name}] CONFIRMED: {result.get('type')}[/]"
+                )
+
+            result_str = json.dumps(result, default=str)[:2000]
+            messages_context += (
+                f"\n\nAssistant: {response_text}\n\n"
+                f"User: Tool result for {tool_name}:\n{result_str}\n\n"
+                f"Continue testing. Write DONE when finished."
+            )
+
+        return findings
+
     # ── Shared ────────────────────────────────────────────────────
 
     def _execute_tool(self, name: str, args: dict) -> dict:
@@ -283,13 +497,15 @@ class BaseAgent:
         findings = []
         try:
             findings = self._deterministic_test(endpoint, config, state)
-        except Exception:
-            pass
+        except Exception as e:
+            from engine.logging_setup import get_logger
+            get_logger().warning("agent_deterministic_test_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
         if config.llm_available and hasattr(self, '_llm_enhance_findings'):
             try:
                 findings = self._llm_enhance_findings(findings, endpoint, config)
-            except Exception:
-                pass
+            except Exception as e:
+                from engine.logging_setup import get_logger
+                get_logger().warning("agent_llm_enhance_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
         return findings
 
     def _deterministic_test(self, endpoint, config, state) -> list:
@@ -310,8 +526,9 @@ class BaseAgent:
             try:
                 from validator import _reset_client
                 _reset_client()
-            except Exception:
-                pass
+            except Exception as e:
+                from engine.logging_setup import get_logger
+                get_logger().warning("agent_client_reset_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
             try:
                 result = TOOL_DISPATCH["validate_finding"](
                     vuln_type=vuln_type,
@@ -327,8 +544,9 @@ class BaseAgent:
                     result["vuln_type"] = result.get("type", vuln_type)
                     result["param_name"] = param
                     findings.append(result)
-            except Exception:
-                pass
+            except Exception as e:
+                from engine.logging_setup import get_logger
+                get_logger().warning("agent_validation_failed", agent=getattr(self, "agent_name", "?"), error=str(e))
         return findings
 
     def _get_default_severity(self) -> str:

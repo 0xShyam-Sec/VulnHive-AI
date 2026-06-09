@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Findings{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+  <h2>Findings{% if scan %} — Scan #{{ scan.id }} {{ scan.target }}{% endif %}</h2>
+
+  <form method="get" class="filter-bar mb-3" hx-get="{{ request.path }}" hx-target="#findings-list" hx-trigger="change delay:200ms" hx-swap="outerHTML">
+    <div class="filter-group">
+      <strong>Severity:</strong>
+      {% for s in ['critical','high','medium','low','info'] %}
+        <label class="filter-chip">
+          <input type="checkbox" name="severity" value="{{ s }}" {% if s in selected_severities %}checked{% endif %}>
+          {{ s|capitalize }}
+        </label>
+      {% endfor %}
+    </div>
+    <div class="filter-group">
+      <strong>Confidence:</strong>
+      {% for c in ['confirmed','high','medium','low','false_positive'] %}
+        <label class="filter-chip">
+          <input type="checkbox" name="confidence" value="{{ c }}" {% if c in selected_confidences %}checked{% endif %}>
+          {{ c|capitalize|replace("_"," ") }}
+        </label>
+      {% endfor %}
+    </div>
+    {% if hidden_count %}
+    <div class="filter-group filter-note">
+      <span class="text-muted">{{ hidden_count }} hidden by current filters</span>
+    </div>
+    {% endif %}
+  </form>
+
+  <div id="findings-list">
+    {% for f in findings %}
+      {% with primary=primaries.get(f.id, {"url":"","method":"GET","source_tool":""}) %}
+        {% include "partials/finding_card.html" %}
+      {% endwith %}
+    {% endfor %}
+    {% if not findings %}
+      <div class="text-muted">No findings match the current filters.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

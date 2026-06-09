@@ -1,0 +1,77 @@
+{# Finding detail — loaded via HTMX into #finding-modal-body #}
+{% set sev_val = f.severity.value if f.severity.value is defined else f.severity %}
+{% set conf_val = f.confidence.value if f.confidence.value is defined else f.confidence %}
+{% set status_val = f.status.value if f.status.value is defined else f.status %}
+
+<ul class="nav nav-tabs" id="findingTabs" role="tablist">
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">Overview</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-evidence" type="button">Evidence</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-instances" type="button">Affected ({{ instances|length }})</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-remediation" type="button">Remediation</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-refs" type="button">References</button></li>
+</ul>
+
+<div class="tab-content mt-3">
+  <div class="tab-pane fade show active" id="tab-overview">
+    <h4>{{ f.title }}</h4>
+    <dl class="row">
+      <dt class="col-sm-3">Severity</dt><dd class="col-sm-9"><span class="badge sev-{{ sev_val|lower }}">{{ sev_val|capitalize }}</span></dd>
+      <dt class="col-sm-3">Confidence</dt><dd class="col-sm-9">{{ conf_val|capitalize|replace("_"," ") }}</dd>
+      <dt class="col-sm-3">CWE</dt><dd class="col-sm-9">{% if f.cwe %}<a href="https://cwe.mitre.org/data/definitions/{{ f.cwe }}.html" target="_blank" rel="noopener">CWE-{{ f.cwe }}</a>{% else %}—{% endif %}</dd>
+      <dt class="col-sm-3">CVSS</dt><dd class="col-sm-9">{% if f.cvss %}{{ "%.1f"|format(f.cvss) }}{% else %}—{% endif %}</dd>
+      <dt class="col-sm-3">Status</dt><dd class="col-sm-9">{{ status_val }}{% if f.verified %} · verified{% endif %}{% if f.false_p %} · false-positive{% endif %}</dd>
+      <dt class="col-sm-3">Rule</dt><dd class="col-sm-9"><code>{{ f.rule_id }}</code></dd>
+      <dt class="col-sm-3">Occurrences</dt><dd class="col-sm-9">{{ f.nb_occurrences }}</dd>
+    </dl>
+  </div>
+
+  <div class="tab-pane fade" id="tab-evidence">
+    <p><strong>Primary evidence:</strong></p>
+    <pre class="evidence-block">{{ f.primary_evidence }}</pre>
+    {% set inst = instances[0] if instances else None %}
+    {% if inst %}
+      <p class="mt-3"><strong>{{ inst.method }} {{ inst.url }}</strong></p>
+      {% if inst.param_name %}<p>Parameter: <code>{{ inst.param_name }}</code></p>{% endif %}
+      {% if inst.payload %}<p>Payload:</p><pre class="payload-block">{{ inst.payload }}</pre>{% endif %}
+      {% if inst.response_excerpt %}<p>Response excerpt:</p><pre class="response-block">{{ inst.response_excerpt }}</pre>{% endif %}
+    {% endif %}
+  </div>
+
+  <div class="tab-pane fade" id="tab-instances">
+    {% if instances %}
+    <table class="table table-sm">
+      <thead><tr><th>URL</th><th>Method</th><th>Param</th><th>Payload</th><th>Source</th></tr></thead>
+      <tbody>
+      {% for i in instances %}
+        <tr>
+          <td><code>{{ i.url }}</code></td>
+          <td>{{ i.method }}</td>
+          <td>{{ i.param_name or "—" }}</td>
+          <td><code>{{ (i.payload or "")[:50] }}</code></td>
+          <td>{{ i.source_tool }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No instance records.</p>
+    {% endif %}
+  </div>
+
+  <div class="tab-pane fade" id="tab-remediation">
+    {% if f.remediation %}
+      <pre class="remediation-block">{{ f.remediation }}</pre>
+    {% else %}
+      <p class="text-muted">No remediation guidance attached.{% if f.cwe %} Heuristic guidance can be derived from CWE-{{ f.cwe }}.{% endif %}</p>
+    {% endif %}
+  </div>
+
+  <div class="tab-pane fade" id="tab-refs">
+    <ul>
+      {% if f.cwe %}<li><a href="https://cwe.mitre.org/data/definitions/{{ f.cwe }}.html" target="_blank" rel="noopener">CWE-{{ f.cwe }} on MITRE</a></li>{% endif %}
+      {% for k, v in f.references_json.items() %}
+        {% if k != "_primary_instance" %}<li><strong>{{ k }}:</strong> {{ v }}</li>{% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+</div>

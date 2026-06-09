@@ -1,0 +1,44 @@
+{# Finding card — compact display with click-to-expand modal load #}
+{% set sev_val = f.severity.value if f.severity.value is defined else f.severity %}
+{% set conf_val = f.confidence.value if f.confidence.value is defined else f.confidence %}
+<div class="finding-card severity-{{ sev_val|lower }} confidence-{{ conf_val }}"
+     hx-get="/findings/{{ f.id }}/modal"
+     hx-target="#finding-modal-body"
+     hx-swap="innerHTML"
+     data-bs-toggle="modal"
+     data-bs-target="#findingDetailModal"
+     role="button"
+     data-finding-id="{{ f.id }}">
+
+  <div class="finding-card-row1">
+    <span class="badge sev-badge sev-{{ sev_val|lower }}">{{ sev_val|capitalize }}</span>
+    <strong class="finding-title">{{ f.title }}</strong>
+
+    <span class="conf-dots conf-{{ conf_val }}" title="Confidence: {{ conf_val }}">
+      {% if conf_val == "confirmed" %}●●●●●{% elif conf_val == "high" %}●●●●○{% elif conf_val == "medium" %}●●●○○{% elif conf_val == "low" %}●●○○○{% else %}●○○○○{% endif %}
+    </span>
+    <span class="conf-label">{{ conf_val|capitalize|replace("_"," ") }}</span>
+
+    {% if f.cwe %}<span class="badge cwe-badge">CWE-{{ f.cwe }}</span>{% endif %}
+    {% if f.cvss %}<span class="badge cvss-badge">CVSS {{ "%.1f"|format(f.cvss) }}</span>{% endif %}
+  </div>
+
+  <div class="finding-card-row2">
+    <span class="method method-{{ primary.method|lower }}">{{ primary.method }}</span>
+    <code class="finding-url">{{ primary.url }}</code>
+    {% if primary.param_name %}<span class="param">param: {{ primary.param_name }}</span>{% endif %}
+    <span class="source">({{ primary.source_tool }})</span>
+  </div>
+
+  {% if primary.payload %}
+  <div class="finding-card-row3">
+    ▸ <code class="payload">{{ primary.payload[:80] }}{% if primary.payload|length > 80 %}…{% endif %}</code>
+    {% if f.primary_evidence %}<span class="arrow">→</span> <span class="evidence-snippet">{{ f.primary_evidence[:60] }}{% if f.primary_evidence|length > 60 %}…{% endif %}</span>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="finding-card-row4">
+    {% if f.nb_occurrences > 1 %}<span class="instance-count">{{ f.nb_occurrences }} affected endpoints</span>{% endif %}
+    <span class="view-detail">View detail →</span>
+  </div>
+</div>

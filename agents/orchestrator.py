@@ -199,14 +199,19 @@ async def run_multi_agent_scan(target: str, auth_status: str,
     try:
         from confidence_scorer import enrich_with_scores
         unique = enrich_with_scores(unique)
-    except Exception:
-        pass
+    except Exception as e:
+        from engine.logging_setup import get_logger
+        get_logger().warning("confidence_scorer_failed", error=str(e))
 
     # ── Phase 3: Adversarial Validation ──────────────────────────
+    # v2.0.0: drop_false_positives=False — the new engine/confidence_labeler.py
+    # relabels rather than deletes. The legacy orchestrator now honors the same
+    # contract: nothing is ever silently dropped; the dashboard filter decides
+    # what is visible.
     try:
         from agents.validator import ValidatorAgent
         validator = ValidatorAgent(llm_backend=llm_backend)
-        unique = validator.validate_batch(unique, drop_false_positives=True)
+        unique = validator.validate_batch(unique, drop_false_positives=False)
     except Exception as e:
         console.print(f"  [yellow]Validation phase skipped: {e}[/]")
 

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Scan #{{ scan.id }} — {{ scan.target }}{% endblock %}
+{% block content %}
+
+<!-- Header -->
+<div class="card mb-3">
+  <div class="card-body d-flex flex-wrap align-items-center gap-3">
+    <div>
+      <small class="text-muted font-mono">SCAN #{{ scan.id }}</small>
+      <h4 class="mb-0">{{ scan.target }}</h4>
+      <small class="text-muted">{{ scan.mode }} · {{ scan.llm_backend }}{% if scan.scan_name %} · {{ scan.scan_name }}{% endif %}</small>
+      {% include "partials/scan_health.html" %}
+    </div>
+    <div class="ms-auto d-flex gap-2 align-items-center">
+      <span id="scan-status-badge" class="badge bg-dark border border-secondary status-{{ scan.status }}">
+        <i class="bi bi-circle-fill" style="font-size:8px;"></i> {{ scan.status }}
+      </span>
+      <a href="{{ url_for('scan_findings_page', scan_id=scan.id) }}" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-list-ul"></i> Findings
+      </a>
+      <a href="{{ url_for('scan_recon_page', scan_id=scan.id) }}" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-radar"></i> Recon
+      </a>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
+          <i class="bi bi-download"></i> Export
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="{{ url_for('export_json', scan_id=scan.id) }}">JSON</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('export_csv', scan_id=scan.id) }}">CSV</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('export_pdf', scan_id=scan.id) }}" target="_blank">PDF</a></li>
+        </ul>
+      </div>
+      {% if scan.status in ('queued', 'running') %}
+      <form method="POST" action="{{ url_for('scan_stop', scan_id=scan.id) }}" class="m-0"
+            hx-post="{{ url_for('scan_stop', scan_id=scan.id) }}"
+            hx-target="#scan-summary"
+            hx-swap="outerHTML"
+            onsubmit="return confirmStop({{ scan.id }}, event);">
+        <button class="btn btn-sm btn-danger">
+          <i class="bi bi-stop-fill"></i> Stop Scan
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- SSE root: subscribes to live scan events -->
+<div hx-ext="sse" sse-connect="{{ url_for('scan_stream', scan_id=scan.id) }}">
+
+  <div class="row g-3">
+
+    <!-- Left column: progress + summary -->
+    <div class="col-lg-4">
+      <div id="scan-summary"
+           hx-get="{{ url_for('partial_scan_summary', scan_id=scan.id) }}"
+           hx-trigger="sse:summary_refresh, sse:done"
+           hx-swap="outerHTML">
+        {% include "partials/scan_summary.html" %}
+      </div>
+
+      <!-- Per-agent sub-progress bars (SSE-driven) -->
+      <div class="card mt-3">
+        <div class="card-body">
+          {% include "partials/scan_live_progress.html" %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column: live findings + logs -->
+    <div class="col-lg-8">
+
+      <!-- Findings stream -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-bug-fill"></i> Live Findings</span>
+          <a href="{{ url_for('scan_findings_page', scan_id=scan.id) }}" class="btn btn-sm btn-outline-light">View all</a>
+        </div>
+        <div class="card-body" style="max-height: 360px; overflow-y: auto;">
+          <div id="findings" sse-swap="finding" hx-swap="afterbegin">
+            {% for f in findings %}
+              {% include "partials/finding_card.html" %}
+            {% else %}
+              <div class="text-muted text-center py-4">
+                <i class="bi bi-shield-check"></i> No findings yet.
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Live log -->
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-terminal-fill"></i> Live Log</span>
+          <small class="text-muted">scan-{{ scan.id }}</small>
+        </div>
+        <div class="card-body p-2">
+          <div id="log" sse-swap="log" hx-swap="beforeend">
+            {% for line in [] %}{% endfor %}
+            <div class="text-muted small">Waiting for scan to start…</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Hidden trigger: when 'done' arrives, reload status badge -->
+  <div sse-swap="done" hx-swap="none"
+       hx-get="{{ url_for('partial_scan_summary', scan_id=scan.id) }}"
+       hx-trigger="sse:done"
+       hx-target="#scan-summary"
+       hx-swap="outerHTML"></div>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+// When 'done' event arrives, swap status badge and reload the page after 1.5s
+// (lets the user see final progress hit 100% before the page refreshes)
+document.body.addEventListener('htmx:sseMessage', (e) => {
+  if (e.detail.type === 'done') {
+    const badge = document.getElementById('scan-status-badge');
+    if (badge) {
+      badge.classList.remove('status-running', 'status-queued');
+      badge.classList.add('status-done');
+      badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> completed';
+    }
+    setTimeout(() => window.location.reload(), 1800);
+  }
+});
+</script>
+{% endblock %}

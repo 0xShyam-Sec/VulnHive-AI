@@ -1,0 +1,2 @@
+{"template-id":"missing-csp-header","info":{"name":"Missing Content-Security-Policy","severity":"low","classification":{"cwe-id":["CWE-693"]}},"host":"http://target.test","matched-at":"http://target.test/","type":"http"}
+{"template-id":"CVE-2024-1234","info":{"name":"Example RCE in Acme 1.x","severity":"critical","classification":{"cwe-id":["CWE-78"],"cve-id":["CVE-2024-1234"]}},"host":"http://target.test","matched-at":"http://target.test/admin","type":"http"}

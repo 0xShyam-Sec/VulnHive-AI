@@ -199,8 +199,9 @@ async def run_multi_agent_scan(target: str, auth_status: str,
     try:
         from confidence_scorer import enrich_with_scores
         unique = enrich_with_scores(unique)
-    except Exception:
-        pass
+    except Exception as e:
+        from engine.logging_setup import get_logger
+        get_logger().warning("confidence_scorer_failed", error=str(e))
 
     # ── Phase 3: Adversarial Validation ──────────────────────────
     try:

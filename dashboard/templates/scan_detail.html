@@ -9,6 +9,7 @@
       <small class="text-muted font-mono">SCAN #{{ scan.id }}</small>
       <h4 class="mb-0">{{ scan.target }}</h4>
       <small class="text-muted">{{ scan.mode }} · {{ scan.llm_backend }}{% if scan.scan_name %} · {{ scan.scan_name }}{% endif %}</small>
+      {% include "partials/scan_health.html" %}
     </div>
     <div class="ms-auto d-flex gap-2 align-items-center">
       <span id="scan-status-badge" class="badge bg-dark border border-secondary status-{{ scan.status }}">

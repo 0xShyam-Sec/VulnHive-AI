@@ -53,3 +53,18 @@
 .evidence-snippet   { color: #b6bcc8; }
 .instance-count     { color: #4cc9f0; }
 .view-detail        { margin-left: auto; color: #7d8597; }
+
+.scan-health-pill {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.85rem;
+    background: #1d2230; color: #e8eaf0; cursor: pointer; user-select: none;
+}
+.scan-health-pill .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-ok       { background: #4ade80; }
+.dot-partial  { background: #f0c419; }
+.dot-degraded { background: #ff4b4b; }
+.dot-green    { background: #4ade80; }
+
+.error-table .err-producer_fatal td { background: #2a1d1d; }
+.error-table .err-fatal td          { background: #3a1010; }
+

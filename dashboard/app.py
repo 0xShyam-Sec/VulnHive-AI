@@ -96,7 +96,9 @@ def scan_new_page():
 
 @app.route("/scans/<int:scan_id>")
 def scan_detail(scan_id):
+    from pathlib import Path
     from engine.modes import MODE_PRODUCERS, build_producer_names
+    from dashboard import repository, db as _db
     scan = db.get_scan(scan_id)
     if not scan:
         abort(404)
@@ -105,8 +107,9 @@ def scan_detail(scan_id):
     if mode not in MODE_PRODUCERS:
         mode = "multi-agent"
     producer_names = build_producer_names(mode)
+    errors = repository.list_scan_errors(Path(_db.DB_PATH), scan_id=scan_id)
     return render_template("scan_detail.html", scan=scan, findings=findings,
-                           producer_names=producer_names)
+                           producer_names=producer_names, errors=errors)
 
 
 def _render_findings_page(scan_id):

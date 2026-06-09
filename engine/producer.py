@@ -49,6 +49,16 @@ class ScanContext:
                 # Observability must never crash the scan.
                 import sys
                 print(f"[scan_error_persist_failed] {e}", file=sys.stderr)
+        if self.redis_client is not None:
+            try:
+                import json
+                self.redis_client.publish(
+                    f"scan:{self.scan_id}:errors",
+                    json.dumps(err.to_dict(), default=str),
+                )
+            except Exception as e:
+                import sys
+                print(f"[scan_error_publish_failed] {e}", file=sys.stderr)
 
     def progress(self, producer: str, current: int, total: int,
                  last: str = "", finished: bool = False) -> None:

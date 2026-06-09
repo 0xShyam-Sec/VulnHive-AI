@@ -1,0 +1,37 @@
+{% set err_count = errors|length %}
+{% set fatal_count = errors|selectattr("kind","equalto","fatal")|list|length %}
+{% set prod_fatal = errors|selectattr("kind","equalto","producer_fatal")|list|length %}
+{% if err_count == 0 %}
+  {% set health, label = "ok", "Healthy" %}
+{% elif fatal_count >= 1 or prod_fatal >= 3 %}
+  {% set health, label = "degraded", "Degraded" %}
+{% else %}
+  {% set health, label = "partial", "Partial" %}
+{% endif %}
+
+<div class="scan-health-pill scan-health-{{ health }}"
+     data-bs-toggle="collapse" data-bs-target="#scan-errors-list"
+     role="button" title="{{ err_count }} error(s) recorded">
+  <span class="dot dot-{{ health }}"></span> {{ label }}
+  {% if err_count %}({{ err_count }}){% endif %}
+</div>
+
+<div id="scan-errors-list" class="collapse mt-2">
+  {% if err_count == 0 %}
+    <p class="text-muted">No errors recorded.</p>
+  {% else %}
+    <table class="table table-sm error-table">
+      <thead><tr><th>Producer</th><th>Phase</th><th>Kind</th><th>Error</th></tr></thead>
+      <tbody>
+        {% for e in errors %}
+          <tr class="err-{{ e.kind }}">
+            <td><code>{{ e.producer }}</code></td>
+            <td>{{ e.phase }}</td>
+            <td>{{ e.kind }}</td>
+            <td><code>{{ (e.error or "")[:200] }}</code></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>

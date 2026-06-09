@@ -236,7 +236,7 @@ def _resolve_producers_for_mode(config: dict) -> list:
 
 
 def _execute_scan(scan_id: int, target: str, config: dict, redis_client):
-    """Run a scan using the producer pipeline. Replaces the hardcoded multi-agent call."""
+    """Run a scan using the producer pipeline. Honors config[mode] and the Redis stop flag."""
     import asyncio
     from pathlib import Path
 
@@ -248,16 +248,46 @@ def _execute_scan(scan_id: int, target: str, config: dict, redis_client):
     configure_logging(scan_id=scan_id, log_dir=Path("logs"), redis_client=redis_client)
 
     producers = _resolve_producers_for_mode(config)
-    result = asyncio.run(run_scan(
-        scan_id=scan_id,
-        target=target,
-        producers=producers,
-        db_path=db_path,
-        auth_config=config.get("auth_config") or {},
-        llm_backend=config.get("llm_backend", "ollama"),
-        redis_client=redis_client,
-    ))
-    return result
+
+    stop_flag = f"vulnhive:stop:{scan_id}"
+    ctx_holder: dict = {}
+
+    async def _watch_stop_flag():
+        # Poll the Redis stop flag and propagate to ctx.cancel().
+        while True:
+            await asyncio.sleep(0.5)
+            ctx = ctx_holder.get("ctx")
+            if ctx is None or ctx.cancelled:
+                return
+            if redis_client is not None:
+                try:
+                    if redis_client.exists(stop_flag):
+                        ctx.cancel()
+                        return
+                except Exception:
+                    pass
+
+    async def _runner():
+        stopper = asyncio.create_task(_watch_stop_flag())
+        try:
+            return await run_scan(
+                scan_id=scan_id,
+                target=target,
+                producers=producers,
+                db_path=db_path,
+                auth_config=config.get("auth_config") or {},
+                llm_backend=config.get("llm_backend", "ollama"),
+                redis_client=redis_client,
+                on_ctx=lambda c: ctx_holder.__setitem__("ctx", c),
+            )
+        finally:
+            stopper.cancel()
+            try:
+                await stopper
+            except Exception:
+                pass
+
+    return asyncio.run(_runner())
 
 
 def _run_engine(target: str, config: dict, scan_id: int) -> list:

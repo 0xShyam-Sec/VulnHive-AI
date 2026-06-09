@@ -37,6 +37,7 @@ async def run_scan(
     auth_config: Optional[dict] = None,
     llm_backend: str = "ollama",
     redis_client=None,
+    on_ctx=None,
 ) -> dict:
     """Run all producers concurrently; persist and broadcast as findings arrive."""
     ctx = ScanContext(
@@ -47,6 +48,11 @@ async def run_scan(
         llm_backend=llm_backend,
         redis_client=redis_client,
     )
+    if on_ctx is not None:
+        try:
+            on_ctx(ctx)
+        except Exception as e:
+            _log.warning("on_ctx_callback_failed", scan_id=scan_id, error=str(e))
     q: asyncio.Queue[Optional[Finding]] = asyncio.Queue(maxsize=256)
 
     tasks = [

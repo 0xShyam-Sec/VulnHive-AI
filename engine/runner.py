@@ -79,6 +79,13 @@ async def run_scan(
                 **instance_payload,
             )
 
+        # Confidence labeling (never drops; only relabels)
+        try:
+            from engine.confidence_labeler import label_confidence
+            item = await label_confidence(item)
+        except Exception as e:
+            _log.warning("confidence_labeler_failed", scan_id=scan_id, error=str(e))
+
         if db_path is not None:
             try:
                 from dashboard.repository import save_finding

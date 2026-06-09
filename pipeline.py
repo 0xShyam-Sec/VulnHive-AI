@@ -7,7 +7,6 @@ Used by both main.py (CLI mode) and blackbox.py (interactive mode).
 import asyncio
 import os
 import time
-from typing import Optional
 
 from rich.console import Console
 

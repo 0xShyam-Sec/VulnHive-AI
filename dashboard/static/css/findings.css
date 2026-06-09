@@ -1,0 +1,55 @@
+.finding-card {
+    border: 1px solid #2a2f3a;
+    border-left-width: 4px;
+    border-radius: 6px;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.5rem;
+    background: #161922;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+.finding-card:hover     { background: #1d2230; }
+.finding-card.severity-critical { border-left-color: #ff4b4b; }
+.finding-card.severity-high     { border-left-color: #ff8a3d; }
+.finding-card.severity-medium   { border-left-color: #f0c419; }
+.finding-card.severity-low      { border-left-color: #4cc9f0; }
+.finding-card.severity-info     { border-left-color: #7d8597; }
+
+.finding-card-row1 { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.finding-card-row2 { margin-top: 0.3rem; font-size: 0.86rem; display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+.finding-card-row3 { margin-top: 0.25rem; font-size: 0.82rem; color: #b6bcc8; }
+.finding-card-row4 { margin-top: 0.35rem; font-size: 0.78rem; color: #7d8597; display: flex; gap: 0.6rem; }
+
+.finding-title { color: #e8eaf0; }
+
+.sev-badge          { font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.78rem; }
+.sev-critical       { background: #ff4b4b; color: white; }
+.sev-high           { background: #ff8a3d; color: white; }
+.sev-medium         { background: #f0c419; color: #1a1a1a; }
+.sev-low            { background: #4cc9f0; color: #1a1a1a; }
+.sev-info           { background: #7d8597; color: white; }
+
+.cwe-badge          { background: #2c3548; color: #b6bcc8; font-family: monospace; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.78rem; }
+.cvss-badge         { background: #3a3f55; color: #e8eaf0; font-family: monospace; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.78rem; }
+
+.conf-dots          { letter-spacing: 1px; font-size: 0.9rem; }
+.conf-confirmed     { color: #4ade80; }
+.conf-high          { color: #4cc9f0; }
+.conf-medium        { color: #f0c419; }
+.conf-low           { color: #ff8a3d; }
+.conf-false_positive { color: #7d8597; }
+.conf-label         { font-size: 0.78rem; color: #b6bcc8; }
+
+.method             { font-family: monospace; font-size: 0.78rem; padding: 0.05rem 0.4rem; border-radius: 3px; background: #2c3548; color: #e8eaf0; }
+.method-post        { background: #21794a; }
+.method-get         { background: #1f5fa1; }
+.method-delete      { background: #a13434; }
+
+.finding-url        { color: #b6bcc8; font-size: 0.84rem; }
+.param              { color: #f0c419; font-size: 0.78rem; }
+.source             { color: #7d8597; font-style: italic; margin-left: auto; }
+
+.payload            { background: #0d0f15; color: #e8eaf0; padding: 0.1rem 0.4rem; border-radius: 3px; }
+.evidence-snippet   { color: #b6bcc8; }
+.instance-count     { color: #4cc9f0; }
+.view-detail        { margin-left: auto; color: #7d8597; }

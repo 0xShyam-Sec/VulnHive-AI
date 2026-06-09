@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>{% block title %}VulnHive AI{% endblock %}</title>
+
+<!-- Bootstrap 5 (the boring choice on purpose) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- HTMX + SSE extension (THE core interactivity) -->
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htmx-ext-sse@2.2.2/dist/sse.min.js"></script>
+
+<!-- Alpine.js (used ONLY for trivially client-side UI like show/hide secrets) -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+
+<!-- xterm.js for the log terminal view (read-only) -->
+<link href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+
+<link href="{{ url_for('static', filename='css/theme.css') }}" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/findings.css') }}">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md sticky-top border-bottom border-secondary px-3 py-2"
+     style="background: rgba(8,11,25,0.85); backdrop-filter: blur(20px);">
+  <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="{{ url_for('index') }}">
+    <span class="brand-logo"><i class="bi bi-shield-shaded"></i></span>
+    <span>VulnHive <span class="text-success">AI</span></span>
+  </a>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="nav">
+    <ul class="navbar-nav me-auto ms-3">
+      <li class="nav-item"><a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('index') }}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li class="nav-item"><a class="nav-link {% if 'scans/new' in request.path %}active{% endif %}" href="{{ url_for('scan_new_page') }}"><i class="bi bi-radar"></i> New Scan</a></li>
+      <li class="nav-item"><a class="nav-link {% if 'history' in request.path %}active{% endif %}" href="{{ url_for('history_page') }}"><i class="bi bi-clock-history"></i> History</a></li>
+      <li class="nav-item"><a class="nav-link {% if 'health' in request.path %}active{% endif %}" href="{{ url_for('health_page') }}"><i class="bi bi-heart-pulse"></i> Health</a></li>
+    </ul>
+    <span class="navbar-text small font-monospace text-muted" id="liveClock"></span>
+    <a class="btn btn-success btn-sm ms-3" href="{{ url_for('scan_new_page') }}">
+      <i class="bi bi-plus-lg"></i> New Scan
+    </a>
+  </div>
+</nav>
+
+<main class="container-fluid py-4 px-4">
+  {% block content %}{% endblock %}
+</main>
+
+<div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

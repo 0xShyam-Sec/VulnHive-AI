@@ -88,6 +88,13 @@ def run_migration_001_up(db_path: Path) -> None:
         return
     if not _has_table(db_path, "findings"):
         _exec_script(db_path, _HERE / "001_finding_instance_split_up.sql")
+        # Fresh DB: rename findings_v2 → findings so the canonical name is usable.
+        conn = sqlite3.connect(db_path)
+        try:
+            conn.execute("ALTER TABLE findings_v2 RENAME TO findings")
+            conn.commit()
+        finally:
+            conn.close()
         return
 
     _exec_script(db_path, _HERE / "001_finding_instance_split_up.sql")

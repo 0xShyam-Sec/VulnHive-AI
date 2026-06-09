@@ -1,0 +1,33 @@
+[tool.ruff]
+target-version = "py310"
+line-length = 110
+extend-exclude = [
+    "venv",
+    "venv.bak-py39-mixed",
+    "__pycache__",
+    "dashboard_v1_backup",
+    "reports",
+    "tests/legacy",
+]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",    # pycodestyle + pyflakes
+    "B",              # bugbear
+    "S110", "S112",   # bare except / except-pass — the bug we are eliminating
+]
+ignore = [
+    "E501",           # line length handled by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+"agents/base.py" = []
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "e2e: end-to-end smoke tests (slow, require DVWA)",
+    "integration: integration tests (medium speed)",
+]

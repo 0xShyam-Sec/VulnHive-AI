@@ -103,19 +103,60 @@ def scan_detail(scan_id):
     return render_template("scan_detail.html", scan=scan, findings=findings)
 
 
+def _render_findings_page(scan_id):
+    from pathlib import Path
+    from dashboard import repository, db as _db
+
+    DEFAULT_SEV = ["critical", "high", "medium"]
+    DEFAULT_CONF = ["confirmed", "high", "medium"]
+
+    severities = request.args.getlist("severity") or DEFAULT_SEV
+    confidences = request.args.getlist("confidence") or DEFAULT_CONF
+    statuses = request.args.getlist("status") or ["active"]
+
+    db_path = Path(_db.DB_PATH)
+    visible = repository.list_findings_filtered(
+        db_path,
+        scan_id=scan_id,
+        severities=severities,
+        confidences=confidences,
+        statuses=statuses,
+    )
+
+    # Count items hidden by current filters
+    all_active = repository.list_findings_filtered(
+        db_path,
+        scan_id=scan_id,
+        severities=None,
+        confidences=None,
+        statuses=None,
+        include_false_p=True,
+    )
+    hidden_count = len(all_active) - len(visible)
+
+    # Primary instance per finding (for the card preview)
+    primaries = {}
+    for f in visible:
+        ins = repository.list_instances_for_finding(db_path, f.id)
+        primaries[f.id] = ins[0].model_dump() if ins else {}
+
+    scan = _db.get_scan(scan_id) if scan_id is not None else None
+    return render_template(
+        "findings.html",
+        scan=scan,
+        findings=visible,
+        primaries=primaries,
+        selected_severities=severities,
+        selected_confidences=confidences,
+        hidden_count=hidden_count,
+    )
+
+
 @app.route("/scans/<int:scan_id>/findings")
 def scan_findings_page(scan_id):
-    scan = db.get_scan(scan_id)
-    if not scan:
+    if not db.get_scan(scan_id):
         abort(404)
-    findings = db.get_findings(
-        scan_id,
-        severity=request.args.get("severity"),
-        status=request.args.get("status"),
-        search=request.args.get("q"),
-    )
-    return render_template("findings.html", scan=scan, findings=findings,
-                            filters=request.args)
+    return _render_findings_page(scan_id)
 
 
 @app.route("/scans/<int:scan_id>/recon")

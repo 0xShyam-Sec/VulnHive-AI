@@ -194,3 +194,46 @@ def list_scan_errors(db_path: Path, scan_id: int) -> list[dict]:
     finally:
         conn.close()
     return [dict(r) for r in rows]
+
+
+def list_findings_filtered(
+    db_path,
+    scan_id: int = None,
+    severities: list = None,
+    confidences: list = None,
+    statuses: list = None,
+    include_false_p: bool = False,
+) -> list:
+    """List findings matching filter criteria. None for severities/confidences/statuses
+    means "no filter on that dimension". Returns a list of Finding objects."""
+    where = []
+    params: list = []
+    if scan_id is not None:
+        where.append("scan_id=?")
+        params.append(scan_id)
+    if severities:
+        placeholders = ",".join("?" * len(severities))
+        where.append(f"severity IN ({placeholders})")
+        params.extend(severities)
+    if confidences:
+        placeholders = ",".join("?" * len(confidences))
+        where.append(f"confidence IN ({placeholders})")
+        params.extend(confidences)
+    if statuses:
+        placeholders = ",".join("?" * len(statuses))
+        where.append(f"status IN ({placeholders})")
+        params.extend(statuses)
+    if not include_false_p:
+        where.append("false_p = 0")
+
+    sql = "SELECT * FROM findings"
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " ORDER BY severity, created_at DESC"
+
+    conn = _connect(db_path)
+    try:
+        rows = conn.execute(sql, params).fetchall()
+    finally:
+        conn.close()
+    return [_row_to_finding(r) for r in rows]

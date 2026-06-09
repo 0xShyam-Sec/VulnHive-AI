@@ -52,6 +52,9 @@ async def run_scan(
     tasks = [
         asyncio.create_task(_drain_into_queue(p, ctx, q)) for p in producers
     ]
+    hb_task = None
+    if redis_client is not None:
+        hb_task = asyncio.create_task(_emit_heartbeat(scan_id, redis_client))
     pending_producers = len(tasks)
 
     out_findings: list[Finding] = []
@@ -114,7 +117,41 @@ async def run_scan(
 
     await asyncio.gather(*tasks, return_exceptions=True)
 
+    if hb_task is not None:
+        hb_task.cancel()
+        try:
+            await hb_task
+        except (asyncio.CancelledError, Exception) as e:
+            _log.debug("heartbeat_task_stopped", error=str(e))
+
     return {"findings": out_findings, "errors": list(ctx.errors)}
+
+
+async def _emit_heartbeat(
+    scan_id: int,
+    redis_client,
+    every: float = 5.0,
+    total_ticks: int = None,
+) -> None:
+    """Publish a heartbeat event every `every` seconds while the scan runs.
+
+    Pass total_ticks for testing (finite ticks). Pass None in production for an
+    indefinite heartbeat that the caller cancels when the scan completes.
+    """
+    import json
+    n = 0
+    while True:
+        try:
+            redis_client.publish(
+                f"scan:{scan_id}:heartbeat",
+                json.dumps({"ts": str(asyncio.get_event_loop().time())}),
+            )
+        except Exception as e:
+            _log.warning("heartbeat_publish_failed", scan_id=scan_id, error=str(e))
+        n += 1
+        if total_ticks is not None and n >= total_ticks:
+            return
+        await asyncio.sleep(every)
 
 
 def attach_instance(

@@ -95,16 +95,20 @@ class NucleiProducer(FindingProducer):
         if self.jsonl_path is None or not self.jsonl_path.exists():
             return
 
-        for line in self.jsonl_path.read_text().splitlines():
-            line = line.strip()
-            if not line or ctx.cancelled:
-                continue
+        lines = [ln.strip() for ln in self.jsonl_path.read_text().splitlines() if ln.strip()]
+        total = len(lines)
+        ctx.progress(producer=self.name, current=0, total=total, last="starting")
+        for idx, line in enumerate(lines):
+            if ctx.cancelled:
+                break
             try:
                 row = json.loads(line)
             except json.JSONDecodeError as e:
                 _log.warning("nuclei_parse_failed", line_excerpt=line[:60], error=str(e))
                 continue
             f = _row_to_finding(ctx.scan_id, row)
+            ctx.progress(producer=self.name, current=idx + 1, total=total,
+                         last=row.get("matched-at", ""))
             yield attach_instance(
                 f,
                 url=row.get("matched-at") or row.get("host") or ctx.target,
@@ -112,6 +116,7 @@ class NucleiProducer(FindingProducer):
                 evidence_raw=json.dumps(row)[:500],
                 source_tool="nuclei",
             )
+        ctx.progress(producer=self.name, current=total, total=total, finished=True)
 
     async def _run_live(self, ctx: ScanContext) -> Optional[Path]:
         out = Path(tempfile.mktemp(suffix=".jsonl", prefix="nuclei-"))

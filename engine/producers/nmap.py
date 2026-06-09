@@ -39,52 +39,62 @@ class NmapProducer(FindingProducer):
             _log.warning("nmap_xml_parse_failed", error=str(e))
             return
 
+        # Collect open ports first so we can report total count accurately.
+        open_ports = []
         for host in tree.getroot().findall("host"):
-            if ctx.cancelled:
-                break
             addr_el = host.find("address")
             host_addr = addr_el.get("addr") if addr_el is not None else ctx.target
             for port in host.findall("./ports/port"):
                 state = port.find("state")
                 if state is None or state.get("state") != "open":
                     continue
-                port_num = int(port.get("portid"))
-                proto = port.get("protocol")
-                svc = port.find("service")
-                product = svc.get("product", "") if svc is not None else ""
-                version = svc.get("version", "") if svc is not None else ""
-                name = svc.get("name", "") if svc is not None else ""
+                open_ports.append((host_addr, port))
 
-                title_bits = [s for s in [product, version] if s]
-                title = " ".join(title_bits) or f"{name} {port_num}/{proto}"
-                rule_id = f"nmap:port-{port_num}-{name or 'unknown'}"
+        total = len(open_ports)
+        ctx.progress(producer=self.name, current=0, total=total, last="starting")
+        for idx, (host_addr, port) in enumerate(open_ports):
+            if ctx.cancelled:
+                break
+            port_num = int(port.get("portid"))
+            proto = port.get("protocol")
+            svc = port.find("service")
+            product = svc.get("product", "") if svc is not None else ""
+            version = svc.get("version", "") if svc is not None else ""
+            name = svc.get("name", "") if svc is not None else ""
 
-                f = Finding(
-                    scan_id=ctx.scan_id,
-                    rule_id=rule_id,
-                    vuln_type="open_port",
-                    title=f"Open port {port_num}/{proto}: {title}".strip(),
-                    cwe=200,
-                    cvss=3.7,
-                    severity=Severity.info,
-                    confidence=Confidence.confirmed,
-                    primary_evidence=f"{host_addr}:{port_num} {proto} {name} {product} {version}".strip(),
-                    references_json={
-                        "host": host_addr,
-                        "port": port_num,
-                        "protocol": proto,
-                        "service": name,
-                        "product": product,
-                        "version": version,
-                    },
-                )
-                yield attach_instance(
-                    f,
-                    url=f"{proto}://{host_addr}:{port_num}",
-                    method=proto.upper(),
-                    evidence_raw=f.primary_evidence,
-                    source_tool="nmap",
-                )
+            title_bits = [s for s in [product, version] if s]
+            title = " ".join(title_bits) or f"{name} {port_num}/{proto}"
+            rule_id = f"nmap:port-{port_num}-{name or 'unknown'}"
+
+            f = Finding(
+                scan_id=ctx.scan_id,
+                rule_id=rule_id,
+                vuln_type="open_port",
+                title=f"Open port {port_num}/{proto}: {title}".strip(),
+                cwe=200,
+                cvss=3.7,
+                severity=Severity.info,
+                confidence=Confidence.confirmed,
+                primary_evidence=f"{host_addr}:{port_num} {proto} {name} {product} {version}".strip(),
+                references_json={
+                    "host": host_addr,
+                    "port": port_num,
+                    "protocol": proto,
+                    "service": name,
+                    "product": product,
+                    "version": version,
+                },
+            )
+            ctx.progress(producer=self.name, current=idx + 1, total=total,
+                         last=f"{host_addr}:{port_num}")
+            yield attach_instance(
+                f,
+                url=f"{proto}://{host_addr}:{port_num}",
+                method=proto.upper(),
+                evidence_raw=f.primary_evidence,
+                source_tool="nmap",
+            )
+        ctx.progress(producer=self.name, current=total, total=total, finished=True)
 
     async def _run_live(self, ctx: ScanContext) -> Optional[Path]:
         out = Path(tempfile.mktemp(suffix=".xml", prefix="nmap-"))

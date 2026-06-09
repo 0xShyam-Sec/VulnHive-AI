@@ -71,7 +71,10 @@ class VulnAgentProducer(FindingProducer):
             _log.error("agent_run_failed", agent=self.agent_name, error=str(e))
             return
 
-        for d in results or []:
+        results = results or []
+        total = len(results)
+        ctx.progress(producer=self.name, current=0, total=total, last="starting")
+        for idx, d in enumerate(results):
             if ctx.cancelled:
                 break
 
@@ -90,6 +93,8 @@ class VulnAgentProducer(FindingProducer):
             finding.cwe = finding.cwe or cwe_default
             finding.cvss = finding.cvss or cvss_default
 
+            ctx.progress(producer=self.name, current=idx + 1, total=total,
+                         last=instance.url or "")
             yield attach_instance(
                 finding,
                 url=instance.url or ctx.target,
@@ -99,3 +104,4 @@ class VulnAgentProducer(FindingProducer):
                 evidence_raw=instance.evidence_raw,
                 source_tool=self.agent_name,
             )
+        ctx.progress(producer=self.name, current=total, total=total, finished=True)

@@ -55,7 +55,10 @@ class PassiveReconProducer(FindingProducer):
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, run_passive_recon, ctx.target, cfg, state)
 
-        for d in list(state.findings):
+        all_findings = list(state.findings)
+        total = len(all_findings)
+        ctx.progress(producer=self.name, current=0, total=total, last="starting")
+        for idx, d in enumerate(all_findings):
             if ctx.cancelled:
                 break
 
@@ -78,6 +81,8 @@ class PassiveReconProducer(FindingProducer):
             if finding.confidence == Confidence.medium:
                 finding.confidence = Confidence.high
 
+            ctx.progress(producer=self.name, current=idx + 1, total=total,
+                         last=instance.url or "")
             yield attach_instance(
                 finding,
                 url=instance.url,
@@ -87,3 +92,4 @@ class PassiveReconProducer(FindingProducer):
                 evidence_raw=instance.evidence_raw,
                 source_tool="passive_recon",
             )
+        ctx.progress(producer=self.name, current=total, total=total, finished=True)

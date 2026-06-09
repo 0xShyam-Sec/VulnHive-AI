@@ -1,0 +1,37 @@
+{# Three-tier live progress: overall, phase, per-agent. SSE-driven. #}
+<div id="scan-live"
+     hx-ext="sse"
+     sse-connect="/scans/{{ scan.id }}/stream"
+     class="scan-live">
+
+  <div class="overall-bar mb-2">
+    <strong>Overall</strong>
+    <div class="progress flex-grow-1">
+      <div class="progress-bar bg-info" id="overall-progress" style="width: {{ scan.progress }}%"
+           sse-swap="progress" hx-swap="outerHTML">
+        {{ scan.progress }}%
+      </div>
+    </div>
+    <span id="elapsed">{{ scan.duration_sec }}s</span>
+  </div>
+
+  <div id="phase-bar" class="mb-2">
+    Phase: <strong>{{ scan.phase }}</strong>
+  </div>
+
+  <div id="agents-list">
+    {# Per-producer rows; each will be swapped in via SSE event "agent_progress" #}
+    {% for name in producer_names %}
+      <div id="agent-{{ name }}" class="agent-row d-flex align-items-center gap-2 mb-1"
+           sse-swap="agent_progress" hx-swap="outerHTML">
+        <span class="agent-name">&#x2BE2; {{ name }}</span>
+        <div class="progress flex-grow-1"><div class="progress-bar bg-secondary"></div></div>
+        <span class="agent-status text-muted">queued</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div id="connection-status" class="mt-2" sse-swap="heartbeat" hx-swap="innerHTML">
+    <span class="dot dot-green">&#x25CF;</span> <span class="small text-muted">live</span>
+  </div>
+</div>

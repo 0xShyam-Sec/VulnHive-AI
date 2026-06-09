@@ -96,11 +96,17 @@ def scan_new_page():
 
 @app.route("/scans/<int:scan_id>")
 def scan_detail(scan_id):
+    from engine.modes import MODE_PRODUCERS, build_producer_names
     scan = db.get_scan(scan_id)
     if not scan:
         abort(404)
     findings = db.get_findings(scan_id)[:50]
-    return render_template("scan_detail.html", scan=scan, findings=findings)
+    mode = (scan.get("mode") if isinstance(scan, dict) else getattr(scan, "mode", None)) or "multi-agent"
+    if mode not in MODE_PRODUCERS:
+        mode = "multi-agent"
+    producer_names = build_producer_names(mode)
+    return render_template("scan_detail.html", scan=scan, findings=findings,
+                           producer_names=producer_names)
 
 
 def _render_findings_page(scan_id):

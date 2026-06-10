@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VulnHive AI — Complete Project Report &amp; User Guide (v2.0.0)</title>
+<style>
+  /* ───────────────────────── page setup ───────────────────────── */
+  @page {
+    size: A4;
+    margin: 22mm 18mm 24mm 18mm;
+    @bottom-center {
+      content: "VulnHive AI — Complete Project Report & User Guide  ·  Page " counter(page) " of " counter(pages);
+      font: 9pt "Helvetica Neue", Arial, sans-serif;
+      color: #6b7280;
+    }
+    @top-right {
+      content: "v2.0.0  ·  2026-06-10";
+      font: 9pt "Helvetica Neue", Arial, sans-serif;
+      color: #9ca3af;
+    }
+  }
+  @page :first {
+    margin: 0;
+    @bottom-center { content: none; }
+    @top-right { content: none; }
+  }
+
+  /* ───────────────────────── typography ───────────────────────── */
+  html { font-size: 10.5pt; }
+  body {
+    font-family: "Charter", "Georgia", "Times New Roman", serif;
+    color: #111827;
+    line-height: 1.5;
+  }
+  h1, h2, h3, h4 {
+    font-family: "Helvetica Neue", "Arial", sans-serif;
+    color: #0b1220;
+    page-break-after: avoid;
+  }
+  h1 { font-size: 22pt; margin: 0 0 .4em; }
+  h2 { font-size: 16pt; margin: 1.2em 0 .4em; border-bottom: 2px solid #fbbf24; padding-bottom: 4px; }
+  h3 { font-size: 13pt; margin: 1em 0 .3em; color: #1f2937; }
+  h4 { font-size: 11pt; margin: .8em 0 .2em; color: #374151; }
+  p  { margin: 0 0 .55em; }
+  ul, ol { margin: 0 0 .8em 1.4em; padding: 0; }
+  li { margin-bottom: 4px; }
+  code, .mono { font-family: "JetBrains Mono", "Menlo", "Courier New", monospace; font-size: 9.4pt; background: #f3f4f6; padding: 1px 4px; border-radius: 3px; }
+  pre  { background: #0f1729; color: #e5e7eb; padding: 10px 14px; border-radius: 6px;
+         font-family: "JetBrains Mono", "Menlo", monospace; font-size: 9pt; line-height: 1.45;
+         overflow-wrap: break-word; white-space: pre-wrap;
+         page-break-inside: avoid; }
+  a { color: #0b62d6; text-decoration: none; }
+
+  /* ───────────────────────── cover page ───────────────────────── */
+  .cover {
+    height: 100vh;
+    background: linear-gradient(135deg, #0b1220 0%, #1f2937 50%, #312e81 100%);
+    color: #f9fafb;
+    padding: 60mm 22mm 30mm;
+    page-break-after: always;
+  }
+  .cover .badge { display: inline-block; padding: 4px 12px; border-radius: 14px;
+                  background: #fbbf24; color: #0b1220; font-family: "Helvetica Neue", sans-serif;
+                  font-weight: 700; font-size: 9pt; letter-spacing: 1px; }
+  .cover h1 { font-size: 40pt; line-height: 1.05; margin: 18mm 0 4mm; color: #f9fafb; }
+  .cover .tagline { font-size: 14pt; color: #d1d5db; max-width: 130mm; line-height: 1.4; }
+  .cover .stats { display: flex; gap: 22mm; margin-top: 30mm; flex-wrap: wrap; }
+  .cover .stat .n { font-family: "Helvetica Neue", sans-serif; font-size: 24pt; font-weight: 700; color: #fbbf24; }
+  .cover .stat .l { font-size: 9pt; color: #d1d5db; letter-spacing: 1.2px; text-transform: uppercase; }
+  .cover .meta { position: absolute; bottom: 22mm; left: 22mm; right: 22mm; color: #9ca3af; font-size: 10pt; }
+  .cover .meta b { color: #fbbf24; }
+
+  /* ───────────────────────── components ───────────────────────── */
+  .toc { font-family: "Helvetica Neue", sans-serif; font-size: 10.5pt; }
+  .toc li { list-style: none; margin: 4px 0; display: flex; }
+  .toc .dot { flex: 1; border-bottom: 1px dotted #9ca3af; margin: 0 6px; transform: translateY(-3px); }
+
+  table { width: 100%; border-collapse: collapse; margin: .6em 0 1em; font-size: 9.6pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #e5e7eb; padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: #0b1220; color: #fbbf24; font-family: "Helvetica Neue", sans-serif; font-weight: 600; }
+  tr:nth-child(even) td { background: #fafafa; }
+  td.mono, code { white-space: nowrap; }
+  td.wrap { white-space: normal; }
+  td.center { text-align: center; }
+
+  .callout {
+    background: #fffbeb;
+    border-left: 4px solid #fbbf24;
+    padding: 10px 14px;
+    margin: 10px 0 16px;
+    page-break-inside: avoid;
+    font-size: 10pt;
+  }
+  .callout .label { font-family: "Helvetica Neue", sans-serif; font-weight: 700; color: #92400e; font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; }
+
+  .warn {
+    background: #fef2f2;
+    border-left: 4px solid #dc2626;
+    padding: 10px 14px;
+    margin: 10px 0 16px;
+    page-break-inside: avoid;
+    font-size: 10pt;
+  }
+  .warn .label { color: #991b1b; }
+
+  .new {
+    background: #ecfdf5;
+    border-left: 4px solid #10b981;
+    padding: 10px 14px;
+    margin: 10px 0 16px;
+    page-break-inside: avoid;
+    font-size: 10pt;
+  }
+  .new .label { color: #065f46; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin: 1em 0; }
+  .stat-card { border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px 14px; text-align: center;
+               background: #fafafa; page-break-inside: avoid; }
+  .stat-card .n { font-family: "Helvetica Neue", sans-serif; font-size: 22pt; font-weight: 700; color: #fbbf24; }
+  .stat-card .l { font-size: 8.5pt; letter-spacing: 1px; text-transform: uppercase; color: #6b7280; }
+
+  .conf {
+    display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 8.6pt;
+    font-family: "Helvetica Neue", sans-serif; font-weight: 600; color: white;
+  }
+  .conf-confirmed     { background: #10b981; }
+  .conf-high          { background: #3b82f6; }
+  .conf-medium        { background: #f59e0b; }
+  .conf-low           { background: #fb923c; }
+  .conf-fp            { background: #6b7280; }
+
+  .sev { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 8.6pt;
+         font-family: "Helvetica Neue", sans-serif; font-weight: 600; color: white; }
+  .sev-critical { background: #dc2626; }
+  .sev-high     { background: #ea580c; }
+  .sev-medium   { background: #f59e0b; color: #111; }
+  .sev-low      { background: #22d3ee; color: #111; }
+  .sev-info     { background: #6b7280; }
+
+  .pagebreak { page-break-before: always; }
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.4em 0; }
+
+  /* Glossary styles */
+  .gloss dt { font-family: "Helvetica Neue", sans-serif; font-weight: 700; color: #1f2937; margin-top: .8em; }
+  .gloss dd { margin: 2px 0 0 0; padding-left: 0; }
+
+  .signature { color: #6b7280; font-size: 9pt; text-align: center; margin-top: 18mm; }
+</style>
+</head>
+<body>
+
+<!-- ═════════════════════════ COVER PAGE ═════════════════════════ -->
+<div class="cover">
+  <span class="badge">v2.0.0  ·  2026 EDITION</span>
+  <h1>VulnHive AI</h1>
+  <p class="tagline">
+    An AI-powered automated penetration testing engine.<br>
+    24+ specialised vulnerability hunters working in parallel,<br>
+    on your laptop, for free — explained for everyone.
+  </p>
+
+  <div class="stats">
+    <div class="stat"><div class="n">25+</div><div class="l">Vuln agents</div></div>
+    <div class="stat"><div class="n">25</div><div class="l">WAF fingerprints</div></div>
+    <div class="stat"><div class="n">68</div><div class="l">Automated tests</div></div>
+    <div class="stat"><div class="n">100%</div><div class="l">Open source</div></div>
+  </div>
+
+  <div class="meta">
+    <p><b>Complete Project Report &amp; User Guide</b> — for technical and non-technical readers.</p>
+    <p>Author: Shyam Kakkad  ·  Repository: github.com/0xShyam-Sec/VulnHive-AI</p>
+    <p>Document date: 2026-06-10  ·  Release tag: <span class="mono" style="background:#1f2937;color:#fbbf24">v2.0.0</span></p>
+  </div>
+</div>
+
+<!-- ═════════════════════════ TOC ═════════════════════════ -->
+<h2 style="border:none;margin-top:0">📑 Table of contents</h2>
+<ul class="toc">
+  <li>Part 1 — What VulnHive AI is, in plain English<span class="dot"></span><b>p. 3</b></li>
+  <li>1. What's new in v2.0.0 (six things you can see)<span class="dot"></span>p. 3</li>
+  <li>2. What is penetration testing? (for everyone)<span class="dot"></span>p. 4</li>
+  <li>3. What VulnHive AI actually does<span class="dot"></span>p. 5</li>
+  <li>4. The problems v2.0.0 fixed<span class="dot"></span>p. 6</li>
+  <li>Part 2 — How it works, step by step<span class="dot"></span><b>p. 8</b></li>
+  <li>5. The 5-phase scan pipeline<span class="dot"></span>p. 8</li>
+  <li>6. The producer model (new in v2.0.0)<span class="dot"></span>p. 9</li>
+  <li>7. The 5-level confidence system (new in v2.0.0)<span class="dot"></span>p. 10</li>
+  <li>8. How findings are organised: Finding + Instance (new in v2.0.0)<span class="dot"></span>p. 11</li>
+  <li>9. The Scan Health pill (new in v2.0.0)<span class="dot"></span>p. 12</li>
+  <li>Part 3 — The engine: every vulnerability it hunts<span class="dot"></span><b>p. 13</b></li>
+  <li>10. The 25 vulnerability agents, in plain English<span class="dot"></span>p. 13</li>
+  <li>Part 4 — Using VulnHive AI<span class="dot"></span><b>p. 17</b></li>
+  <li>11. System requirements<span class="dot"></span>p. 17</li>
+  <li>12. Installation guide (step by step)<span class="dot"></span>p. 17</li>
+  <li>13. Command-line guide<span class="dot"></span>p. 18</li>
+  <li>14. The dashboard, tour by tour<span class="dot"></span>p. 19</li>
+  <li>Part 5 — The engineering behind it<span class="dot"></span><b>p. 21</b></li>
+  <li>15. Architecture (the moving parts)<span class="dot"></span>p. 21</li>
+  <li>16. Technology stack<span class="dot"></span>p. 22</li>
+  <li>17. Project journey — three months of building<span class="dot"></span>p. 23</li>
+  <li>Part 6 — Reference<span class="dot"></span><b>p. 24</b></li>
+  <li>18. Real-world use cases<span class="dot"></span>p. 24</li>
+  <li>19. Project statistics<span class="dot"></span>p. 24</li>
+  <li>20. Safety, ethics &amp; legal<span class="dot"></span>p. 25</li>
+  <li>21. What's next on the roadmap<span class="dot"></span>p. 25</li>
+  <li>22. Glossary — every technical term explained<span class="dot"></span>p. 26</li>
+  <li>23. Conclusion<span class="dot"></span>p. 28</li>
+</ul>
+
+<!-- ═════════════════════════ PART 1 ═════════════════════════ -->
+<div class="pagebreak"></div>
+<h1>Part 1 — What VulnHive AI is, in plain English</h1>
+
+<h2>1. What's new in v2.0.0 (six things you can see)</h2>
+
+<p>If you have used a previous version of VulnHive AI, this section tells you the six biggest improvements in the v2.0.0 release. Each one is explained in plain English; later sections go deeper.</p>
+
+<div class="new">
+  <span class="label">📈 New 1 — Findings no longer go missing silently</span>
+  <p>In the old version, certain bugs hid inside the engine. For example, when you picked "Full" mode in the dashboard, the engine sometimes ran a simpler "Multi-Agent" scan instead. Or the validator that re-checks findings would quietly delete the ones it disagreed with, even if you wanted to see them. <b>v2.0.0 fixes nine separate places where findings were being thrown away or skipped.</b> The result: a typical scan now produces 2–5× more findings, and the dashboard tells you when something didn't work instead of just showing "0".</p>
+</div>
+
+<div class="new">
+  <span class="label">📈 New 2 — A new confidence system</span>
+  <p>Every finding now gets one of five labels: <span class="conf conf-confirmed">Confirmed</span> <span class="conf conf-high">High</span> <span class="conf conf-medium">Medium</span> <span class="conf conf-low">Low</span> <span class="conf conf-fp">False positive</span>. Nothing is ever deleted. You decide what to look at by toggling filters in the dashboard. See <b>§7</b>.</p>
+</div>
+
+<div class="new">
+  <span class="label">📈 New 3 — One bug, many places (Finding + Instance model)</span>
+  <p>If the same kind of bug appears on 50 different web pages, the old version collapsed those into a single line — losing the information about <i>which</i> pages were affected. v2.0.0 keeps them all: one <b>Finding</b> (the issue), many <b>Instances</b> (the affected URLs). See <b>§8</b>.</p>
+</div>
+
+<div class="new">
+  <span class="label">📈 New 4 — The Scan Health pill</span>
+  <p>The dashboard now shows a small badge — <span class="conf conf-confirmed">Healthy</span> <span class="conf conf-medium">Partial</span> <span class="conf" style="background:#dc2626">Degraded</span> — that tells you whether everything in the engine ran successfully. Click it to see exactly which sub-step had a problem and why. No more "the scan finished with 0 findings… or did it crash?" ambiguity. See <b>§9</b>.</p>
+</div>
+
+<div class="new">
+  <span class="label">📈 New 5 — Live per-agent progress bars</span>
+  <p>During a scan, the dashboard now shows a progress bar for <i>each</i> of the 25 agents, plus a heartbeat that tells you the connection is alive. Previously, you stared at a single "40%" bar for four minutes wondering if the scan was stuck.</p>
+</div>
+
+<div class="new">
+  <span class="label">📈 New 6 — One-click PDF reports that work on every OS</span>
+  <p>The old PDF export only worked on macOS (it depended on Google Chrome). v2.0.0 uses <b>WeasyPrint</b>, a pure-Python PDF engine that runs on Linux, Windows, and macOS without any browser. The exact PDF you are reading right now was generated by it.</p>
+</div>
+
+<h2>2. What is penetration testing? (for everyone)</h2>
+
+<p><b>Penetration testing</b> — usually shortened to <b>pentesting</b> — means legally and safely trying to break into a computer system to find its security holes <i>before</i> real criminals do.</p>
+
+<div class="callout">
+  <span class="label">💡 In simple terms</span>
+  <p>Think of it like hiring a professional burglar to test your house. They try every door, every window, every lock — not to steal anything, but to give you a report saying <i>"your back window doesn't lock properly, fix it before a real burglar finds it."</i></p>
+</div>
+
+<h3>Common web vulnerabilities (in plain English)</h3>
+
+<table>
+  <thead><tr><th>Vulnerability</th><th>What it means (simple)</th><th>Real-world danger</th></tr></thead>
+  <tbody>
+    <tr><td>SQL Injection</td><td>Tricking a website's database into revealing or changing data by typing special characters into input boxes.</td><td>Attacker steals all user passwords, credit cards, personal data.</td></tr>
+    <tr><td>Cross-Site Scripting (XSS)</td><td>Injecting malicious code into a website that runs in other visitors' browsers.</td><td>Attacker steals login sessions; hijacks accounts.</td></tr>
+    <tr><td>Authentication Bypass</td><td>Finding a way to get in without a valid password.</td><td>Attacker logs in as admin without credentials.</td></tr>
+    <tr><td>IDOR</td><td>Changing a number in the URL to see someone else's private data (e.g. <span class="mono">/order/123</span> → <span class="mono">/order/124</span>).</td><td>You view other users' invoices, messages, files.</td></tr>
+    <tr><td>Command Injection</td><td>Tricking the server into running the attacker's commands.</td><td>Attacker takes full control of the server.</td></tr>
+    <tr><td>Subdomain Takeover</td><td>Claiming an abandoned sub-website a company forgot about (e.g. <span class="mono">old.company.com</span>).</td><td>Attacker hosts phishing pages on the company's own domain.</td></tr>
+  </tbody>
+</table>
+
+<div class="warn">
+  <span class="label">⚠ Important — Legality</span>
+  <p>Penetration testing is <b>only legal</b> when you own the system, or have explicit written permission to test it. Testing someone else's website without permission is a crime in most countries. VulnHive AI is intended for <b>education, authorised testing, bug-bounty programs, and CTF competitions</b>. See §20.</p>
+</div>
+
+<h2>3. What VulnHive AI actually does</h2>
+
+<p>You give it one web-address (URL), and it does everything automatically:</p>
+<ol>
+  <li><b>Crawls</b> every page, form, and hidden API endpoint on the website.</li>
+  <li><b>Logs in</b> automatically if you provide credentials (supports five different login styles).</li>
+  <li><b>Fingerprints</b> the technology stack and detects which firewall (WAF) protects the site.</li>
+  <li><b>Gathers intelligence</b> — DNS records, subdomains, open ports, known CVEs from public databases.</li>
+  <li><b>Attacks</b> every discovered point with 25 specialised vulnerability agents, running in parallel.</li>
+  <li><b>Bypasses firewalls</b> by automatically mutating any payload that gets blocked.</li>
+  <li><b>Validates</b> each finding to reduce false alarms — but never silently deletes anything (new in v2.0.0).</li>
+  <li><b>Chains</b> vulnerabilities into multi-step attack paths (e.g. <i>XSS → steal cookie → log in as admin</i>).</li>
+  <li><b>Reports</b> everything in HTML, JSON, and PDF — with plain-English explanations and code-level fixes.</li>
+</ol>
+
+<div class="callout">
+  <span class="label">💡 In simple terms</span>
+  <p>Imagine hiring a team of 25 expert security specialists — one for each type of attack — who work together 24/7, never get tired, cost nothing, and finish in minutes instead of weeks. That is VulnHive AI.</p>
+</div>
+
+<h2>4. The problems v2.0.0 fixed</h2>
+
+<p>Before v2.0.0, the engine had a class of bugs the team called <b>silent finding loss</b>. The tool would <i>look</i> like it was working correctly — but findings were disappearing somewhere between discovery and the report. Below is the inventory of fixes, written in plain English.</p>
+
+<h4>Bugs that caused real findings to disappear</h4>
+<table>
+  <thead><tr><th style="width:32mm">Problem in v1.x</th><th>What it meant for users</th><th>Fix in v2.0.0</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Dashboard ignored the scan mode</b></td>
+      <td>You picked "Full" in the dropdown, but the engine ran the smaller "Multi-Agent" scan instead. Anything that "Full" would have added (Nmap, Nuclei, Shodan) silently never happened.</td>
+      <td>The worker now honours every option in the dropdown.</td>
+    </tr>
+    <tr>
+      <td><b>Validator silently deleted "false positives"</b></td>
+      <td>An automated re-check labelled some findings as suspect and just deleted them. If it was wrong, you never even knew.</td>
+      <td>Nothing is deleted. The validator now <i>labels</i> the confidence; you choose what to view (see §7).</td>
+    </tr>
+    <tr>
+      <td><b>Over-aggressive de-duplication</b></td>
+      <td>If the same kind of bug appeared on 50 pages, the engine showed it once — losing the information about <i>which</i> 50 pages were affected.</td>
+      <td>The new Finding + Instance model preserves every affected page (see §8).</td>
+    </tr>
+    <tr>
+      <td><b>Nmap, Nuclei, Shodan only ran in "Full"</b></td>
+      <td>Three of the most useful tools didn't run in the default mode. Lost 10–30 findings per scan.</td>
+      <td>Nuclei and the Playwright crawler now run in the default "Multi-Agent" mode too. Nmap and Shodan stay in "Full" for speed.</td>
+    </tr>
+    <tr>
+      <td><b>The browser crawler found pages but never reported them</b></td>
+      <td>It discovered authenticated endpoints but only stored them as "places I visited". They never became findings, so the IDOR hunter never saw them.</td>
+      <td>The crawler now emits <i>IDOR-candidate</i> findings for every authenticated endpoint.</td>
+    </tr>
+    <tr>
+      <td><b>Eight places that swallowed errors silently</b></td>
+      <td>If one agent crashed or the LLM returned malformed output, the scan continued as if nothing happened. You couldn't tell that something had broken.</td>
+      <td>Every failure now produces a log entry and a row in the scan-errors table. The dashboard shows it via the Scan Health pill (§9).</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>Bugs that made the tool slow or unreliable</h4>
+<table>
+  <thead><tr><th style="width:32mm">Problem in v1.x</th><th>What it meant for users</th><th>Fix in v2.0.0</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>"Parallel" wasn't actually parallel</b></td>
+      <td>The label said "parallel agents", but each one waited for the previous to finish. A scan that should take 60–90 seconds took 5 minutes.</td>
+      <td>True async parallelism: a verified test shows 3 producers running in 1.13 s (was ~3 s before).</td>
+    </tr>
+    <tr>
+      <td><b>Fragile LLM output parsing</b></td>
+      <td>If the local AI returned slightly malformed JSON, the engine silently lost that finding.</td>
+      <td>Switched to a library called <i>Instructor</i> with grammar-constrained output and auto-retry. The AI cannot return malformed output any more.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>Things that made the tool hard to use or see</h4>
+<table>
+  <thead><tr><th style="width:32mm">Problem in v1.x</th><th>What it meant for users</th><th>Fix in v2.0.0</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Dashboard hid most of each finding</b></td>
+      <td>Each finding card only showed 4 fields. To see the payload, the evidence, or the CWE/CVSS scores you had to export the PDF.</td>
+      <td>Cards now show CWE, CVSS, confidence dots, the payload preview, and a count of affected pages. Click any card → a detail modal with 5 tabs.</td>
+    </tr>
+    <tr>
+      <td><b>"Stuck at 40%" for 4 minutes</b></td>
+      <td>The single progress bar never moved during the attack phase even when agents were finishing.</td>
+      <td>One progress bar per agent + a heartbeat. You can see exactly which agent is working on which URL.</td>
+    </tr>
+    <tr>
+      <td><b>PDF export only worked on macOS</b></td>
+      <td>The PDF code hard-coded the path to Google Chrome on macOS. Linux and Windows users couldn't export.</td>
+      <td>WeasyPrint (pure Python, no browser) is now the default. Playwright/Chromium is a flag-controlled fallback for charts that need JavaScript.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═════════════════════════ PART 2 ═════════════════════════ -->
+<div class="pagebreak"></div>
+<h1>Part 2 — How it works, step by step</h1>
+
+<h2>5. The 5-phase scan pipeline</h2>
+
+<p>Every scan, whatever its mode, runs through the same five phases:</p>
+
+<table>
+  <thead><tr><th style="width:20mm">Phase</th><th>What happens</th><th>Plain-English analogy</th></tr></thead>
+  <tbody>
+    <tr><td><b>1. Discovery</b></td>
+        <td>Web crawler, deep JavaScript analysis, WAF detection, WHOIS/DNS lookup, subdomain enumeration.</td>
+        <td>"Walk around the property and make a map. Note every door, window, and skylight."</td></tr>
+    <tr><td><b>2. Analysis</b></td>
+        <td>The engine looks at everything discovered and decides which vulnerability to test next, prioritising the most valuable targets first.</td>
+        <td>"Decide which doors look easiest to pick, and try those first."</td></tr>
+    <tr><td><b>3. Attack</b></td>
+        <td>25 vulnerability agents run in <i>parallel</i> (new in v2.0.0 — see §6). If the firewall blocks a payload, the adaptive engine mutates it and tries again.</td>
+        <td>"Send 25 specialists in at once. If one is blocked, try a different lock-pick."</td></tr>
+    <tr><td><b>4. Validation</b></td>
+        <td>Every potential finding is re-tested and labelled with a confidence level. <b>Nothing is deleted</b> (new in v2.0.0 — see §7).</td>
+        <td>"Double-check each report. Mark uncertain ones, but keep them in the file."</td></tr>
+    <tr><td><b>5. Report</b></td>
+        <td>The exploit-chain engine combines findings into attack paths. HTML, JSON, and PDF reports are produced.</td>
+        <td>"Write up everything. Highlight the attacks that chain together into something dangerous."</td></tr>
+  </tbody>
+</table>
+
+<h2>6. The producer model (new in v2.0.0)</h2>
+
+<p>The biggest internal change in v2.0.0 is something called the <b>producer model</b>. In plain English:</p>
+
+<p>Before v2.0.0, the engine had three different mechanisms for getting findings. The 25 vulnerability agents worked one way. The discovery modules (passive recon, the browser crawler) worked a second way. Imported tools (Nmap, Nuclei) worked a third way. They didn't share infrastructure, so improving one didn't improve the others, and bugs hid in the seams between them.</p>
+
+<p>In v2.0.0, everything that finds a finding is a <b>producer</b>. There is one rule for how a producer behaves, one place where findings get persisted, one place that handles errors, and one place that broadcasts progress to the dashboard. That means:</p>
+
+<ul>
+  <li>Adding a new scanner takes ~25 lines of glue code, not ~250.</li>
+  <li>A bug fix in the shared pipeline benefits every scanner at once.</li>
+  <li>The dashboard's progress bar, error pill, and finding cards all work with every scanner uniformly.</li>
+</ul>
+
+<div class="callout">
+  <span class="label">💡 In simple terms</span>
+  <p>Think of it like a factory floor. Before, every product line had its own conveyor belt that didn't connect to anything else — and quality control was inconsistent. Now everything moves on a single conveyor belt, with one quality station, one packaging station, and one shipping label printer. Improvements anywhere in the line improve everything.</p>
+</div>
+
+<h4>What counts as a producer in v2.0.0</h4>
+<table>
+  <thead><tr><th>Producer</th><th>What it produces</th><th>Where it gets its data</th></tr></thead>
+  <tbody>
+    <tr><td>Passive Recon</td><td>Missing security headers, sensitive files (.env, .git, backups), CORS misconfigurations.</td><td>Sends harmless requests to the target.</td></tr>
+    <tr><td>Playwright Crawler</td><td>Authenticated endpoints as "IDOR candidates"; leaked secrets from JavaScript files.</td><td>Real browser navigation.</td></tr>
+    <tr><td>Nuclei (importer)</td><td>Hits against 10,000+ vulnerability templates.</td><td>Shells out to the <span class="mono">nuclei</span> binary.</td></tr>
+    <tr><td>Nmap (importer)</td><td>One finding per open port, with service version.</td><td>Shells out to the <span class="mono">nmap</span> binary.</td></tr>
+    <tr><td>Shodan (importer)</td><td>Known CVEs affecting the target's IP address.</td><td>Free Shodan InternetDB endpoint.</td></tr>
+    <tr><td>WAF Detector</td><td>Which firewall protects the target (Cloudflare, AWS WAF, etc.).</td><td>Sends probe payloads and watches responses.</td></tr>
+    <tr><td>25 Vulnerability Agents</td><td>One finding per confirmed exploit (SQLi, XSS, IDOR, …).</td><td>Sends payloads and checks for proof of exploit.</td></tr>
+  </tbody>
+</table>
+
+<h2>7. The 5-level confidence system (new in v2.0.0)</h2>
+
+<p>In v1.x the engine could mark a finding as either "validated" or "not validated", and would delete the "not validated" ones before the user saw them. Two things were wrong with that:</p>
+<ol>
+  <li>The decision was binary — a single coin flip — even though real-world findings sit on a spectrum from "definitely exploitable" to "probably nothing".</li>
+  <li>Deletion was final. If the validator was wrong, you would never know what was lost.</li>
+</ol>
+
+<p>v2.0.0 replaces this with a 5-level confidence axis. Borrowing from <b>OWASP ZAP</b> and <b>DefectDojo</b> — two industry-standard vulnerability-management tools — the levels are:</p>
+
+<table>
+  <thead><tr><th>Label</th><th>Meaning</th><th>How the engine assigns it</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="conf conf-confirmed">Confirmed</span></td>
+      <td>Proof of exploit. The engine has direct evidence that the bug is real.</td>
+      <td>A payload triggered a database error message; an XSS canary executed; a file outside the web root was successfully read; etc.</td>
+    </tr>
+    <tr>
+      <td><span class="conf conf-high">High</span></td>
+      <td>Multiple strong signals. Probably real, but no single piece of definitive proof.</td>
+      <td>A heuristic test passed and the URL/parameter context matches a known vulnerable pattern.</td>
+    </tr>
+    <tr>
+      <td><span class="conf conf-medium">Medium</span></td>
+      <td>One signal. Worth investigating, but might be noise.</td>
+      <td>A single regex pattern matched the response, or the LLM identified a candidate but the engine couldn't run a deterministic test.</td>
+    </tr>
+    <tr>
+      <td><span class="conf conf-low">Low</span></td>
+      <td>Possible, but mostly an opinion. Default-hidden in the dashboard.</td>
+      <td>LLM-only suggestion with no payload-level proof.</td>
+    </tr>
+    <tr>
+      <td><span class="conf conf-fp">False positive</span></td>
+      <td>The validator believes this is wrong, but it's <i>kept</i> for review.</td>
+      <td>Default-hidden in the dashboard; one click to reveal.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The dashboard's default view shows <b>Confirmed + High + Medium</b>. A toggle at the top of the page reveals Low and False-positive findings, with a count next to it ("12 hidden by current filters"). You always know what you're not looking at.</p>
+
+<h2>8. How findings are organised: Finding + Instance (new in v2.0.0)</h2>
+
+<p>In v1.x, every finding was one row in a flat table. If the same kind of bug appeared on 50 different web pages, the engine kept the first one and threw away the other 49. Bad for two reasons: you didn't know how widespread the problem was, and you couldn't tell whether the second occurrence was different.</p>
+
+<p>v2.0.0 splits the flat row into two parts (borrowed from <b>DefectDojo</b>'s data model):</p>
+
+<div class="grid2">
+  <div class="stat-card" style="text-align:left">
+    <h4 style="margin:0 0 6px;color:#fbbf24">Finding</h4>
+    <p style="margin:0;font-size:9.6pt">One per logical vulnerability. Holds the title, CWE, CVSS, severity, confidence, remediation guidance, references, and a <b>count of how many places it appears</b>.</p>
+  </div>
+  <div class="stat-card" style="text-align:left">
+    <h4 style="margin:0 0 6px;color:#fbbf24">Finding Instance</h4>
+    <p style="margin:0;font-size:9.6pt">One per affected URL. Holds the URL, method, parameter, payload, request, response excerpt, and which tool found it.</p>
+  </div>
+</div>
+
+<div class="callout">
+  <span class="label">💡 In simple terms — "one bug, many doors"</span>
+  <p>Imagine your security audit finds that every door in your building uses the same broken lock. The "Finding" is "Broken lock model XYZ". The "Instances" are the 50 doors. The old system would have shown you "Broken lock" once and made you guess which 49 other doors are affected. The new system shows "Broken lock" once, with a row that says "50 affected doors — click to see them all".</p>
+</div>
+
+<h4>Why the split matters in practice</h4>
+<ul>
+  <li><b>For decision-making</b>: knowing a CORS misconfiguration affects 1 endpoint vs 200 endpoints completely changes the priority.</li>
+  <li><b>For reporting</b>: bug-bounty platforms (HackerOne, Bugcrowd) want the full list of affected URLs, not just a representative one.</li>
+  <li><b>For developers</b>: the engineer fixing the issue needs to know <i>every</i> place to patch.</li>
+</ul>
+
+<h2>9. The Scan Health pill (new in v2.0.0)</h2>
+
+<p>Sometimes a scan finishes with 0 findings. There are three possible reasons:</p>
+<ol>
+  <li>The target really is well-secured.</li>
+  <li>Something in the engine broke half-way through and you didn't notice.</li>
+  <li>You picked the wrong scan mode for the target (e.g. "API" mode on a server-rendered site).</li>
+</ol>
+
+<p>In v1.x there was no way to tell which one. v2.0.0 introduces the <b>Scan Health pill</b> in the top-right of the scan detail page:</p>
+
+<table>
+  <thead><tr><th>Badge</th><th>Meaning</th><th>What to do</th></tr></thead>
+  <tbody>
+    <tr><td><span class="conf conf-confirmed">Healthy</span></td><td>Zero errors recorded across all 30+ producers.</td><td>Trust the result. If 0 findings, the target really is clean (for what we could test).</td></tr>
+    <tr><td><span class="conf conf-medium">Partial</span></td><td>1–2 producers crashed or returned no data, but most ran fine.</td><td>Click the pill to see which producers failed. Usually safe to trust the findings; some might be missing.</td></tr>
+    <tr><td><span class="conf" style="background:#dc2626">Degraded</span></td><td>3+ producers failed, or a fatal error occurred.</td><td>Click the pill to investigate. Likely re-run after fixing the underlying issue (e.g. start Ollama, install Nmap).</td></tr>
+  </tbody>
+</table>
+
+<p>Clicking the pill expands a table with every recorded error: which producer, which phase, what went wrong. The errors also stream <i>live</i> via Server-Sent Events while the scan is running — so you see problems as they happen, not after the scan finishes.</p>
+
+<!-- ═════════════════════════ PART 3 ═════════════════════════ -->
+<div class="pagebreak"></div>
+<h1>Part 3 — The engine: every vulnerability it hunts</h1>
+
+<h2>10. The 25 vulnerability agents, in plain English</h2>
+
+<p>Each agent is a specialist that tests for exactly one type of weakness, thoroughly. Below, each agent's <b>name</b>, <b>plain-English description</b>, and the <b>technical labels</b> (CWE = the industry-standard catalogue number; CVSS = the industry-standard severity score from 0 to 10).</p>
+
+<h3>🩹 Injection attacks (the classic web bugs)</h3>
+<table>
+  <thead><tr><th style="width:36mm">Agent</th><th>What it finds (plain English)</th><th style="width:18mm">CWE</th><th style="width:14mm">CVSS</th></tr></thead>
+  <tbody>
+    <tr><td><b>SQL Injection</b></td><td>Tricks the database into running attacker queries. Uses four techniques: error-based, blind boolean, blind time-based, and UNION-select.</td><td>CWE-89</td><td>9.8</td></tr>
+    <tr><td><b>Cross-Site Scripting (XSS)</b></td><td>Injects JavaScript that runs in other visitors' browsers. Tests reflected, stored, and DOM-based variants.</td><td>CWE-79</td><td>6.1</td></tr>
+    <tr><td><b>Command Injection</b></td><td>Tricks the server into running operating-system commands (e.g. <span class="mono">; ls /</span>).</td><td>CWE-78</td><td>9.8</td></tr>
+    <tr><td><b>Server-Side Template Injection (SSTI)</b></td><td>Injects code into template engines (Jinja, Twig, Handlebars) so they execute attacker code on the server.</td><td>CWE-94</td><td>9.8</td></tr>
+    <tr><td><b>XML External Entity (XXE)</b></td><td>Uses malicious XML to read files off the server or make it connect to internal services.</td><td>CWE-611</td><td>8.2</td></tr>
+  </tbody>
+</table>
+
+<h3>🔑 Authentication &amp; authorisation</h3>
+<table>
+  <thead><tr><th style="width:36mm">Agent</th><th>What it finds (plain English)</th><th style="width:18mm">CWE</th><th style="width:14mm">CVSS</th></tr></thead>
+  <tbody>
+    <tr><td><b>Authentication Bypass</b></td><td>Finds ways to log in without credentials — hidden admin panels, default passwords, broken session checks.</td><td>CWE-287</td><td>9.1</td></tr>
+    <tr><td><b>IDOR (Insecure Direct Object Reference)</b></td><td>Changes IDs in URLs (e.g. <span class="mono">/order/123</span> → <span class="mono">/order/124</span>) to see other users' data.</td><td>CWE-639</td><td>7.5</td></tr>
+    <tr><td><b>IDOR Advanced</b></td><td>Tries advanced techniques: UUID enumeration, base64 ID guessing, parallel session abuse.</td><td>CWE-639</td><td>8.1</td></tr>
+    <tr><td><b>JWT (JSON Web Tokens)</b></td><td>Tries to forge authentication tokens: <span class="mono">alg=none</span> attacks, weak HMAC keys, key confusion.</td><td>CWE-347</td><td>7.5</td></tr>
+    <tr><td><b>CSRF (Cross-Site Request Forgery)</b></td><td>Tricks logged-in users into performing actions they didn't intend (e.g. clicking a link that transfers money).</td><td>CWE-352</td><td>6.5</td></tr>
+    <tr><td><b>Mass Assignment</b></td><td>Sends extra parameters in a form to set fields you shouldn't be able to set (e.g. <span class="mono">is_admin=true</span> on a registration form).</td><td>CWE-915</td><td>7.5</td></tr>
+  </tbody>
+</table>
+
+<h3>🌐 Infrastructure &amp; network</h3>
+<table>
+  <thead><tr><th style="width:36mm">Agent</th><th>What it finds (plain English)</th><th style="width:18mm">CWE</th><th style="width:14mm">CVSS</th></tr></thead>
+  <tbody>
+    <tr><td><b>Server-Side Request Forgery (SSRF)</b></td><td>Makes the server fetch URLs the attacker controls — often pointing at internal addresses to reach things behind the firewall.</td><td>CWE-918</td><td>8.6</td></tr>
+    <tr><td><b>Subdomain Takeover</b></td><td>Looks for abandoned sub-sites whose DNS still points to a third-party service (Heroku, S3, etc.) that you can re-register. 34 takeover signatures.</td><td>CWE-200</td><td>3.7</td></tr>
+    <tr><td><b>HTTP Request Smuggling</b></td><td>Confuses load-balancers and back-end servers about where one request ends and the next begins, letting the attacker poison other users' responses.</td><td>CWE-444</td><td>8.6</td></tr>
+    <tr><td><b>Open Redirect</b></td><td>Finds URL parameters that redirect users to attacker-controlled sites — a common building block in phishing.</td><td>CWE-601</td><td>6.1</td></tr>
+    <tr><td><b>Cache Poisoning</b></td><td>Tricks the cache (CDN) into serving malicious content to <i>every</i> visitor.</td><td>CWE-444</td><td>7.5</td></tr>
+  </tbody>
+</table>
+
+<h3>🧪 API, logic &amp; information</h3>
+<table>
+  <thead><tr><th style="width:36mm">Agent</th><th>What it finds (plain English)</th><th style="width:18mm">CWE</th><th style="width:14mm">CVSS</th></tr></thead>
+  <tbody>
+    <tr><td><b>GraphQL</b></td><td>Introspection attacks, query-depth abuse, alias-based rate-limit bypass, batch query abuse.</td><td>CWE-200</td><td>5.3</td></tr>
+    <tr><td><b>API Versioning</b></td><td>Looks for old API versions (e.g. <span class="mono">/v1/</span>, <span class="mono">/v2/beta/</span>) that may still respond and lack the security patches the latest version has.</td><td>CWE-200</td><td>3.1</td></tr>
+    <tr><td><b>Business Logic</b></td><td>Tests for application-specific logic flaws: price manipulation, coupon stacking, race conditions, workflow skipping.</td><td>CWE-840</td><td>6.5</td></tr>
+    <tr><td><b>Rate Limiting</b></td><td>Detects endpoints that lack protection against brute-force attacks on logins, password resets, OTP entry.</td><td>CWE-799</td><td>5.3</td></tr>
+    <tr><td><b>WebSocket</b></td><td>Tests real-time connections for missing origin checks, unauthenticated message channels, message injection.</td><td>CWE-1385</td><td>5.3</td></tr>
+    <tr><td><b>Security Headers</b></td><td>Checks for missing or mis-configured browser protections: X-Frame-Options, CSP, HSTS, Referrer-Policy, Permissions-Policy.</td><td>CWE-693</td><td>4.3</td></tr>
+    <tr><td><b>Sensitive Data Exposure</b></td><td>Finds exposed files that shouldn't be web-reachable: <span class="mono">.env</span>, <span class="mono">.git</span>, database backups, configuration files.</td><td>CWE-200</td><td>5.3</td></tr>
+    <tr><td><b>File Upload</b></td><td>Tries to upload web shells, polyglot files, and content-type confusions to gain code execution.</td><td>CWE-434</td><td>8.8</td></tr>
+    <tr><td><b>Path Traversal</b></td><td>Uses <span class="mono">../../</span> sequences and encoded variants to read files outside the web root (e.g. <span class="mono">/etc/passwd</span>).</td><td>CWE-22</td><td>7.5</td></tr>
+  </tbody>
+</table>
+
+<!-- ═════════════════════════ PART 4 ═════════════════════════ -->
+<div class="pagebreak"></div>
+<h1>Part 4 — Using VulnHive AI</h1>
+
+<h2>11. System requirements</h2>
+
+<table>
+  <thead><tr><th>Requirement</th><th>Minimum</th><th>Recommended</th></tr></thead>
+  <tbody>
+    <tr><td>Operating system</td><td>macOS / Linux / Windows</td><td>macOS or Linux</td></tr>
+    <tr><td>Python</td><td>3.10+</td><td>3.14 (the project's target)</td></tr>
+    <tr><td>RAM</td><td>8 GB</td><td>16 GB (for local AI)</td></tr>
+    <tr><td>Disk space</td><td>2 GB (core)</td><td>15 GB (with AI models)</td></tr>
+    <tr><td>Internet</td><td>Required for cloud features &amp; threat intel</td><td>Broadband</td></tr>
+    <tr><td>Local AI (optional)</td><td>None (works without)</td><td>Ollama with <span class="mono">qwen3:14b</span> or <span class="mono">deepseek-r1:14b</span></td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <span class="label">⚠ Python 3.14 note</span>
+  <p>v2.0.0 upgraded the project from Python 3.9 to 3.14. If you're upgrading from v1.x, you must rebuild your virtual environment: <span class="mono">python3.14 -m venv venv</span> then <span class="mono">./venv/bin/pip install -r requirements.txt</span>. The new dependencies (Instructor, Pydantic 2.x) require Python 3.10+.</p>
+</div>
+
+<h2>12. Installation guide (step by step)</h2>
+
+<pre># 1. Clone the project from GitHub
+git clone https://github.com/0xShyam-Sec/VulnHive-AI.git
+cd VulnHive-AI
+
+# 2. Create a Python 3.14 virtual environment
+python3.14 -m venv venv
+source venv/bin/activate
+
+# 3. Install Python dependencies
+pip install -r requirements.txt
+
+# 4. (macOS only) System libraries for the PDF engine (WeasyPrint)
+brew install pango cairo
+
+# 4b. (Linux / Ubuntu) Same step
+sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b \
+                        libcairo2 libgdk-pixbuf-2.0-0 fonts-liberation
+
+# 5. (Optional) Install a free local AI
+ollama pull qwen3:14b           # default; great speed/quality balance
+ollama pull deepseek-r1:14b     # used for reasoning-heavy agents
+
+# 6. (Optional) Add cloud-AI keys to .env
+echo "GROQ_API_KEY=your-key-here" > .env</pre>
+
+<h2>13. Command-line guide</h2>
+
+<h4>Basic scan</h4>
+<pre>python main.py --target https://example.com</pre>
+<p>The simplest possible scan. Uses the default <b>Multi-Agent</b> mode (now includes Nuclei + Playwright in v2.0.0).</p>
+
+<h4>Authenticated scan</h4>
+<pre>python main.py --target http://localhost:8080 \
+    --auth-type form \
+    --login-url http://localhost:8080/login.php \
+    --username admin --password password</pre>
+<p>For sites behind a login. Five <span class="mono">--auth-type</span> values are supported: <span class="mono">form</span>, <span class="mono">basic</span>, <span class="mono">bearer</span>, <span class="mono">cookie</span>, <span class="mono">none</span>.</p>
+
+<h4>Full pentest (everything turned on)</h4>
+<pre>python main.py --target https://example.com \
+    --mode full \
+    --exploit-chains --adaptive \
+    --nmap full --nuclei cve \
+    --report-dir ./reports</pre>
+
+<h4>Choose your AI backend</h4>
+<pre># Free local AI (default)
+python main.py --target https://example.com --llm ollama
+
+# Free cloud AI (faster, ~10× quicker than Ollama)
+python main.py --target https://example.com --llm groq</pre>
+
+<h4>Launch the dashboard</h4>
+<pre># Two terminals are needed.
+# Terminal 1 — the web server
+python main.py --dashboard --port 5001
+
+# Terminal 2 — the worker that runs scans (macOS forking-safety var is required)
+OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES python -m dashboard.worker</pre>
+<p>Then open <span class="mono">http://localhost:5001</span> in your browser.</p>
+
+<h2>14. The dashboard, tour by tour</h2>
+
+<h3>14.1 Starting a scan</h3>
+<p>From the home page, click <b>New scan</b>. Fill in the target URL, optionally a login URL + credentials, pick a mode, and click <b>Start</b>. The scan is queued and a worker picks it up within a second.</p>
+
+<h3>14.2 The live scan page</h3>
+<p>While a scan runs, you see <b>three tiers of progress</b> (new in v2.0.0):</p>
+<ol>
+  <li><b>Overall percentage</b> across all five phases, with the elapsed time.</li>
+  <li><b>Current phase</b> — Discovery, Analysis, Attack, Validation, Report.</li>
+  <li><b>Per-agent progress rows</b> — one bar per producer, showing what URL each agent is currently testing.</li>
+</ol>
+<p>A small "● live" indicator pulses every 5 seconds — the <i>heartbeat</i>. If it stops, you'll see "Connection stalled" so you know the dashboard is no longer receiving updates.</p>
+
+<p>The <b>Scan Health pill</b> sits in the top-right (§9). It updates in real time as errors are recorded.</p>
+
+<h3>14.3 Finding cards</h3>
+<p>Each finding is a card showing six things at a glance (new in v2.0.0):</p>
+<table>
+  <thead><tr><th>Element</th><th>What it tells you</th></tr></thead>
+  <tbody>
+    <tr><td>Severity badge</td><td>Critical / High / Medium / Low / Info — colour-coded.</td></tr>
+    <tr><td>Confidence dots</td><td>●●●●● Confirmed,  ●●●●○ High,  ●●●○○ Medium,  ●●○○○ Low,  ●○○○○ False-positive.</td></tr>
+    <tr><td>CWE + CVSS</td><td>Industry-standard catalogue number (e.g. CWE-89) + numeric severity (e.g. 9.8). Click CWE → MITRE definition.</td></tr>
+    <tr><td>URL + parameter</td><td>The exact endpoint and form field that's affected.</td></tr>
+    <tr><td>Payload preview</td><td>The first 80 characters of the payload that triggered the finding.</td></tr>
+    <tr><td>Instance counter</td><td>"3 affected endpoints" when the same Finding has multiple Instances (§8).</td></tr>
+  </tbody>
+</table>
+
+<h3>14.4 The detail modal — five tabs</h3>
+<p>Click any card → an HTMX-loaded modal opens with five tabs:</p>
+<ol>
+  <li><b>Overview</b> — severity, confidence, CWE link, CVSS, status, rule ID, occurrence count.</li>
+  <li><b>Evidence</b> — the full payload, request/response excerpts, deterministic-probe markers.</li>
+  <li><b>Affected (N)</b> — the table of every <b>FindingInstance</b> with URL, method, parameter, payload, source.</li>
+  <li><b>Remediation</b> — plain-English fix guidance, plus code snippets where available.</li>
+  <li><b>References</b> — OWASP / CWE / CVE links and the original rule that fired.</li>
+</ol>
+
+<h3>14.5 The filter bar</h3>
+<p>At the top of the findings list (new in v2.0.0), a row of checkboxes lets you toggle:</p>
+<ul>
+  <li><b>Severity</b> — Critical, High, Medium, Low, Info.</li>
+  <li><b>Confidence</b> — Confirmed, High, Medium, Low, False-positive.</li>
+  <li><b>Status</b> — Active, Verified, Out-of-scope, Risk-accepted.</li>
+</ul>
+<p>The list updates instantly (via HTMX) without a full page reload. A count of "12 hidden by current filters" tells you how much is being filtered out.</p>
+
+<h3>14.6 Stopping a scan</h3>
+<p>The big red <b>Stop</b> button cancels the scan. New in v2.0.0: it now responds in about 1 second instead of waiting for the current phase to finish. The worker checks a Redis flag every 0.5 seconds; when set, every producer notices and exits cleanly.</p>
+
+<h3>14.7 Exporting a PDF</h3>
+<p>Click <b>Export PDF</b> on the scan detail page. The new cross-platform engine (WeasyPrint) produces a print-quality PDF on Linux, macOS, and Windows alike — no browser dependency. Set <span class="mono">VULNHIVE_PDF_ENGINE=playwright</span> if you need JS-rendered charts.</p>
+
+<!-- ═════════════════════════ PART 5 ═════════════════════════ -->
+<div class="pagebreak"></div>
+<h1>Part 5 — The engineering behind it</h1>
+
+<h2>15. Architecture (the moving parts)</h2>
+
+<p>The v2.0.0 architecture follows the pattern used by mature security tools like DefectDojo, Faraday, and ProjectDiscovery Cloud. From top to bottom:</p>
+
+<pre>┌───────────────────────────────────────────────────────────────────┐
+│  MODE TABLE  (engine/modes.py — one source of truth)              │
+│  multi-agent → [passive_recon, playwright, nuclei, waf_detector,  │
+│                 …all 25 vuln agents]                              │
+│  full        → [nmap, shodan, …everything from multi-agent…]      │
+└───────────────────────────────┬───────────────────────────────────┘
+                                ▼
+┌──────────────── PRODUCERS (engine/producers/*) ────────────────┐
+│  Each yields Finding objects asynchronously. ~30 producers     │
+│  total: 25 vuln agents + 5 importers/crawlers + null stubs.    │
+└───────────────────────────────┬────────────────────────────────┘
+                                ▼  (asyncio.gather, true parallel)
+┌──────────────── SAFE-RUN BOUNDARY (engine/safe_run.py) ────────┐
+│  Catches exceptions. Other producers continue.                 │
+│  Records ScanError(kind=producer_fatal) for the failed one.    │
+└───────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌──────────────── DEDUP + CONFIDENCE LABELER ────────────────────┐
+│  Same (rule_id, cwe, title) → one Finding, many Instances.     │
+│  Confidence labeler relabels — never deletes.                  │
+└───────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌──────────────── PERSISTENCE (SQLite) ──────────────────────────┐
+│  findings + finding_instances + scan_errors tables.            │
+│  Reversible schema migration runs on first boot.               │
+└───────────────────────────────┬────────────────────────────────┘
+                                ▼
+┌──────────────── REDIS PUBSUB ──────────────────────────────────┐
+│  scan:&lt;id&gt;:findings  scan:&lt;id&gt;:progress                       │
+│  scan:&lt;id&gt;:heartbeat scan:&lt;id&gt;:errors  scan:&lt;id&gt;:logs         │
+└───────────────────────────────┬────────────────────────────────┘
+                                ▼  (Server-Sent Events)
+┌──────────────── HTMX DASHBOARD ────────────────────────────────┐
+│  Cards swap in, modal opens on click, progress bars update,    │
+│  heartbeat pulses, errors stream live. No JavaScript framework │
+│  — just HTMX swapping HTML fragments.                          │
+└────────────────────────────────────────────────────────────────┘</pre>
+
+<h2>16. Technology stack</h2>
+
+<table>
+  <thead><tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="6">Backend</td><td>Python 3.14</td><td>Core programming language (was 3.9 pre-v2.0.0).</td></tr>
+    <tr><td>httpx + asyncio</td><td>Truly async HTTP client + concurrency.</td></tr>
+    <tr><td>Pydantic v2</td><td>Type-safe data models (Finding, FindingInstance).</td></tr>
+    <tr><td>structlog</td><td>Structured logging with three sinks (console / file / Redis).</td></tr>
+    <tr><td>Playwright</td><td>Headless browser for crawling JS-heavy single-page apps.</td></tr>
+    <tr><td>SQLite (WAL mode)</td><td>Persistence; reversible migrations.</td></tr>
+    <tr><td rowspan="4">AI / LLM</td><td>Ollama + qwen3:14b</td><td>Free local AI (default).</td></tr>
+    <tr><td>Ollama + deepseek-r1:14b</td><td>Used for reasoning-heavy agents (business logic, auth bypass, OAuth, race conditions, ATO).</td></tr>
+    <tr><td>Instructor</td><td>Pydantic-validated, retry-on-error wrapper around the LLM. <b>New in v2.0.0.</b></td></tr>
+    <tr><td>Groq / Gemini (optional)</td><td>Free cloud AI alternatives.</td></tr>
+    <tr><td rowspan="3">Security tooling</td><td>Nmap 7.99</td><td>Network port + service-version scanning.</td></tr>
+    <tr><td>Nuclei 3.8</td><td>10,000+ vulnerability templates.</td></tr>
+    <tr><td>Shodan InternetDB</td><td>Free CVE-by-IP lookups.</td></tr>
+    <tr><td rowspan="5">Frontend / reporting</td><td>Flask + RQ + Redis</td><td>Web server + job queue + pubsub.</td></tr>
+    <tr><td>HTMX 2.x</td><td>Reactive HTML swaps (no JS framework needed).</td></tr>
+    <tr><td>Bootstrap 5 + custom CSS</td><td>Dark, cyberpunk-styled UI.</td></tr>
+    <tr><td>WeasyPrint</td><td>Cross-platform PDF rendering (replaced Chrome). <b>New in v2.0.0.</b></td></tr>
+    <tr><td>Server-Sent Events</td><td>Live progress, findings, heartbeats, errors.</td></tr>
+    <tr><td rowspan="3">Quality</td><td>pytest + pytest-asyncio</td><td>68 automated tests (unit + integration + migration).</td></tr>
+    <tr><td>ruff</td><td>Lint + bare-except ban (S110 / S112). <b>New in v2.0.0.</b></td></tr>
+    <tr><td>GitHub Actions</td><td>CI on every push: ruff + 68-test suite + Linux WeasyPrint check.</td></tr>
+  </tbody>
+</table>
+
+<h2>17. Project journey — three months of building</h2>
+
+<table>
+  <thead><tr><th style="width:26mm">Stage</th><th>What was built</th></tr></thead>
+  <tbody>
+    <tr><td><b>1. Foundation</b></td><td>"XBOW-level" engine architecture; 7-phase implementation plan with 15 tasks; central config + a thread-safe shared brain (ScanState).</td></tr>
+    <tr><td><b>2. Engine core</b></td><td>Decision engine, exploit foundations, chain engine, agent registry, Playwright crawler, passive recon.</td></tr>
+    <tr><td><b>3. The agent army</b></td><td>24 specialised vulnerability agents (SQLi, XSS, SSRF, IDOR, …); 4 payload libraries; chain verifier; API schema inference.</td></tr>
+    <tr><td><b>4. Multi-LLM &amp; agents</b></td><td>Support for Ollama, Groq, Gemini, Anthropic; agent roster grown to 25 with deepseek-r1 → qwen3 model switch.</td></tr>
+    <tr><td><b>5. Deeper discovery</b></td><td>Deep JS crawler (source maps + webpack chunks); subdomain agent with crt.sh, Wayback Machine, async DNS, 34 takeover signatures.</td></tr>
+    <tr><td><b>6. WAF &amp; intel</b></td><td>25-WAF fingerprinter; WHOIS + DNS + SPF/DMARC; integration with Shodan, NVD, CISA-KEV.</td></tr>
+    <tr><td><b>7. External tools</b></td><td>Nmap + Nuclei integrated. Multi-LLM support productionised.</td></tr>
+    <tr><td><b>8. Web dashboard</b></td><td>Premium cyberpunk SOC dashboard with live progress, animated ring, real-time terminal, findings tables, recon views.</td></tr>
+    <tr><td><b>9. AI chat</b></td><td>An AI assistant that knows your entire scan — answers in plain English, writes fix code, builds exploit chains on request.</td></tr>
+    <tr><td style="background:#fffbeb"><b>10. v2.0.0 uplift</b><br>(2026-06)</td><td><b>This release.</b> Six categories of fixes: silent finding loss eliminated, true async parallelism, structured LLM output, the Finding+Instance data model, the 5-tier confidence axis, cross-platform PDF, sub-progress UI, Scan Health pill, and a 68-test suite with CI.</td></tr>
+  </tbody>
+</table>
+
+<!-- ═════════════════════════ PART 6 ═════════════════════════ -->
+<div class="pagebreak"></div>
+<h1>Part 6 — Reference</h1>
+
+<h2>18. Real-world use cases</h2>
+
+<h4>For students &amp; learners</h4>
+<p>Learn offensive security hands-on. Practise against intentionally-vulnerable apps like DVWA, OWASP Juice Shop, or testphp.vulnweb.com. Understand how real attacks work in a safe, legal environment.</p>
+
+<h4>For developers</h4>
+<p>Test your own web application <i>before</i> launching. Catch security bugs early when they're cheap to fix. The AI assistant suggests remediation code in your language of choice.</p>
+
+<h4>For small businesses</h4>
+<p>Run security audits without hiring expensive consultants. Get a professional PDF report you can act on or hand to your dev team.</p>
+
+<h4>For bug-bounty hunters</h4>
+<p>Quickly map a target's attack surface, discover hidden subdomains and endpoints, and identify vulnerabilities to report for cash rewards on HackerOne, Bugcrowd, and Intigriti.</p>
+
+<h4>For security researchers</h4>
+<p>Automate the repetitive parts of reconnaissance and scanning. Spend your time on deep manual analysis of the most interesting findings the tool surfaces.</p>
+
+<h4>For CTF competitions</h4>
+<p>Rapidly enumerate targets and find vulnerabilities during time-pressured Capture-The-Flag security competitions.</p>
+
+<h2>19. Project statistics (v2.0.0)</h2>
+
+<div class="grid2">
+  <div class="stat-card"><div class="n">100+</div><div class="l">Python source files</div></div>
+  <div class="stat-card"><div class="n">32K+</div><div class="l">Lines of code</div></div>
+  <div class="stat-card"><div class="n">25</div><div class="l">Vulnerability agents</div></div>
+  <div class="stat-card"><div class="n">25</div><div class="l">WAF fingerprints</div></div>
+  <div class="stat-card"><div class="n">68</div><div class="l">Automated tests</div></div>
+  <div class="stat-card"><div class="n">10K+</div><div class="l">Nuclei templates</div></div>
+  <div class="stat-card"><div class="n">4</div><div class="l">AI backends supported</div></div>
+  <div class="stat-card"><div class="n">5</div><div class="l">Confidence levels</div></div>
+  <div class="stat-card"><div class="n">3</div><div class="l">Scan modes (Fast, Multi-Agent, Full, Browser, API)</div></div>
+  <div class="stat-card"><div class="n">38</div><div class="l">Commits in the v2.0.0 release</div></div>
+</div>
+
+<h2>20. Safety, ethics &amp; legal</h2>
+
+<div class="warn">
+  <span class="label">⚠ Use responsibly</span>
+  <p>VulnHive AI is a powerful security tool. With that power comes responsibility:</p>
+  <ul>
+    <li>Only scan systems you own, or have explicit written permission to test.</li>
+    <li>Unauthorised scanning of websites is illegal in most countries and can result in criminal charges.</li>
+    <li>Always follow <b>responsible disclosure</b> — report vulnerabilities privately to the owner; never exploit them.</li>
+    <li>This tool is intended for <b>education, authorised testing, bug-bounty programs, and CTF competitions</b> only.</li>
+  </ul>
+  <p>Safe practice targets to learn on: <b>DVWA</b>, <b>OWASP Juice Shop</b>, <b>scanme.nmap.org</b>, <b>testphp.vulnweb.com</b> — these are built specifically to be tested legally.</p>
+</div>
+
+<h2>21. What's next on the roadmap</h2>
+
+<table>
+  <thead><tr><th>Item</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td><s>PDF report generation (one-click branded PDF)</s></td><td><span class="conf conf-confirmed">Done in v2.0.0</span></td></tr>
+    <tr><td><s>Per-agent live progress bars</s></td><td><span class="conf conf-confirmed">Done in v2.0.0</span></td></tr>
+    <tr><td><s>True parallel agent execution</s></td><td><span class="conf conf-confirmed">Done in v2.0.0</span></td></tr>
+    <tr><td><s>Eliminate silent finding loss</s></td><td><span class="conf conf-confirmed">Done in v2.0.0</span></td></tr>
+    <tr><td><s>Cross-platform PDF (Linux/Windows/macOS)</s></td><td><span class="conf conf-confirmed">Done in v2.0.0</span></td></tr>
+    <tr><td>Bugcrowd VRT taxonomy column on every finding</td><td><span class="conf conf-medium">Planned</span></td></tr>
+    <tr><td>7-Question triage gate (PASS / DOWNGRADE / KILL)</td><td><span class="conf conf-medium">Planned</span></td></tr>
+    <tr><td>URL-shape prioritiser (e.g. <span class="mono">/search?q=</span> → SQLi first)</td><td><span class="conf conf-medium">Planned</span></td></tr>
+    <tr><td>Scheduled scans (daily / weekly cron)</td><td><span class="conf conf-low">Backlog</span></td></tr>
+    <tr><td>CI/CD integration — scan on every GitHub PR</td><td><span class="conf conf-low">Backlog</span></td></tr>
+    <tr><td>Cloud-security scanning (AWS / Azure / GCP)</td><td><span class="conf conf-low">Backlog</span></td></tr>
+    <tr><td>Source-code scanning (SAST)</td><td><span class="conf conf-low">Backlog</span></td></tr>
+    <tr><td>Slack / Discord notifications for critical findings</td><td><span class="conf conf-low">Backlog</span></td></tr>
+  </tbody>
+</table>
+
+<div class="pagebreak"></div>
+<h2>22. Glossary — every technical term explained</h2>
+
+<dl class="gloss">
+
+<dt>Agent</dt>
+<dd>A specialised piece of code that hunts for exactly one type of vulnerability — e.g. the SQL Injection agent, the XSS agent. VulnHive AI ships 25 agents.</dd>
+
+<dt>API (Application Programming Interface)</dt>
+<dd>A way for software to talk to other software. Websites use APIs internally to fetch data; modern apps expose them publicly so other developers can build on top.</dd>
+
+<dt>API Versioning</dt>
+<dd>The practice of numbering APIs (<span class="mono">/v1/</span>, <span class="mono">/v2/</span>). A common security mistake: the old version stays online but never gets the security patches the new version has.</dd>
+
+<dt>Authentication Bypass</dt>
+<dd>Any technique that lets an attacker access protected functionality without valid credentials — default passwords, broken session checks, hidden admin paths, forced browsing.</dd>
+
+<dt>Bug Bounty</dt>
+<dd>A reward program where companies pay security researchers for responsibly reporting vulnerabilities. Major platforms: HackerOne, Bugcrowd, Intigriti.</dd>
+
+<dt>Business Logic Vulnerability</dt>
+<dd>A flaw in how the application's rules work, not in its code. Example: a coupon code that can be applied twice and reduces the price below zero.</dd>
+
+<dt>Cache Poisoning</dt>
+<dd>Tricking the cache (CDN or reverse proxy) into storing a malicious response that's then served to every subsequent visitor.</dd>
+
+<dt>CDN (Content Delivery Network)</dt>
+<dd>A geographically-distributed cache that sits in front of a website to serve content faster. Examples: Cloudflare, Akamai, AWS CloudFront.</dd>
+
+<dt>Confidence (in VulnHive AI)</dt>
+<dd>A label assigned to every finding indicating how sure the engine is that the bug is real. Five levels: Confirmed / High / Medium / Low / False-positive. See §7.</dd>
+
+<dt>CSRF (Cross-Site Request Forgery)</dt>
+<dd>An attack that tricks logged-in users into performing actions they didn't intend — by getting them to click a link or load an invisible image that sends a request to a site they're authenticated to.</dd>
+
+<dt>CTF (Capture The Flag)</dt>
+<dd>Security competitions where teams race to solve security puzzles. A safe, legal environment to practise offensive security skills.</dd>
+
+<dt>CVE (Common Vulnerabilities and Exposures)</dt>
+<dd>A unique identifier for a publicly-known security vulnerability — e.g. <span class="mono">CVE-2024-1234</span>. Maintained by MITRE.</dd>
+
+<dt>CVSS (Common Vulnerability Scoring System)</dt>
+<dd>An industry-standard score from 0 to 10 measuring how severe a vulnerability is. 0–3.9 = Low, 4.0–6.9 = Medium, 7.0–8.9 = High, 9.0–10 = Critical.</dd>
+
+<dt>CWE (Common Weakness Enumeration)</dt>
+<dd>An industry-standard catalogue of <i>types</i> of software weaknesses — e.g. <span class="mono">CWE-89</span> = "SQL Injection". Maintained by MITRE.</dd>
+
+<dt>Dedup (deduplication)</dt>
+<dd>The process of recognising that two findings are the "same" issue and merging them. The new Finding+Instance model (§8) makes this smarter: same issue → one Finding, many Instances.</dd>
+
+<dt>DNS (Domain Name System)</dt>
+<dd>The system that translates human-readable addresses (<span class="mono">example.com</span>) into computer addresses (<span class="mono">93.184.216.34</span>).</dd>
+
+<dt>DVWA (Damn Vulnerable Web Application)</dt>
+<dd>An intentionally-vulnerable PHP application built for legal security practice. Comes pre-loaded with most of the bugs VulnHive AI hunts.</dd>
+
+<dt>False Positive</dt>
+<dd>A finding the engine reported but which turns out not to be a real vulnerability. v2.0.0 stops <i>deleting</i> false positives and starts <i>labelling</i> them, so users can review.</dd>
+
+<dt>Finding</dt>
+<dd>In VulnHive AI v2.0.0, a logical vulnerability — one row per distinct issue. Holds title, CWE, CVSS, severity, confidence, remediation. Has many Instances. See §8.</dd>
+
+<dt>FindingInstance</dt>
+<dd>A specific occurrence of a Finding on a specific URL. Holds the URL, method, parameter, payload, evidence. Many Instances can share one Finding.</dd>
+
+<dt>GraphQL</dt>
+<dd>An alternative to REST APIs where clients ask for exactly the data they want in a single query. Comes with its own vulnerability class — introspection, depth attacks, batch abuse.</dd>
+
+<dt>HTMX</dt>
+<dd>A small JavaScript library that lets HTML elements make network requests and swap responses into the page — without a heavy JavaScript framework like React or Vue. The VulnHive dashboard is built on HTMX.</dd>
+
+<dt>IDOR (Insecure Direct Object Reference)</dt>
+<dd>A vulnerability where changing an identifier in the URL (e.g. <span class="mono">/order/123</span> → <span class="mono">/order/124</span>) lets you access other users' data because the server doesn't check ownership.</dd>
+
+<dt>Instance</dt>
+<dd>See <i>FindingInstance</i>.</dd>
+
+<dt>JWT (JSON Web Token)</dt>
+<dd>A compact way to represent authentication claims, used by many modern APIs. Has its own family of vulnerabilities — <span class="mono">alg=none</span>, weak HMAC keys, key confusion.</dd>
+
+<dt>LLM (Large Language Model)</dt>
+<dd>The kind of AI behind tools like ChatGPT. VulnHive AI uses an LLM (qwen3:14b by default) to reason about which vulnerabilities to test and how to interpret responses.</dd>
+
+<dt>Mass Assignment</dt>
+<dd>A vulnerability where a server-side application blindly accepts every field a user sends in a form. Example: posting <span class="mono">is_admin=true</span> to a "register" endpoint.</dd>
+
+<dt>Multi-Agent (scan mode)</dt>
+<dd>The default scan mode. Runs all 25 vulnerability agents plus passive reconnaissance, the Playwright crawler, the WAF detector, and (new in v2.0.0) Nuclei.</dd>
+
+<dt>Nmap</dt>
+<dd>A network scanner that probes hosts for open ports and identifies the services running on them. Industry-standard since 1997.</dd>
+
+<dt>Nuclei</dt>
+<dd>A template-based vulnerability scanner. Each template is a YAML file describing a known issue and how to detect it. Comes with 10,000+ community-contributed templates.</dd>
+
+<dt>OWASP (Open Worldwide Application Security Project)</dt>
+<dd>A non-profit foundation that produces free security resources. Their <i>OWASP Top 10</i> ranks the most common web vulnerabilities each year.</dd>
+
+<dt>Path Traversal</dt>
+<dd>Using <span class="mono">../</span> sequences (or encoded equivalents) in a file-path parameter to read files outside the intended directory.</dd>
+
+<dt>Pentesting (Penetration Testing)</dt>
+<dd>Legally simulating attacks on a system to find security weaknesses before real attackers do. See §2.</dd>
+
+<dt>Phase</dt>
+<dd>One of the five stages of a scan: Discovery → Analysis → Attack → Validation → Report. See §5.</dd>
+
+<dt>Producer</dt>
+<dd>In v2.0.0, anything that emits findings — agents, importers, crawlers. They all share one interface and one pipeline. See §6.</dd>
+
+<dt>Pydantic</dt>
+<dd>A Python library for type-safe data validation. v2.0.0 uses Pydantic to model Findings and Instances, catching shape errors at construction time.</dd>
+
+<dt>Rate Limiting</dt>
+<dd>A defensive measure that limits how many requests a user can make per second. Missing rate limits allow brute-force attacks on logins, OTPs, password resets.</dd>
+
+<dt>Redis</dt>
+<dd>An in-memory database. VulnHive AI uses it for the worker job queue (with RQ) and the pubsub channels that push live updates to the dashboard.</dd>
+
+<dt>Remediation</dt>
+<dd>The fix for a vulnerability. The detail modal's Remediation tab gives plain-English guidance plus code snippets where available.</dd>
+
+<dt>RQ (Redis Queue)</dt>
+<dd>A simple Python job queue backed by Redis. VulnHive AI uses it so the dashboard can queue scans and the worker can pick them up asynchronously.</dd>
+
+<dt>SAST (Static Application Security Testing)</dt>
+<dd>Scanning source code for security bugs without running the app. The opposite is DAST (Dynamic) — what VulnHive AI does today. Planned for a future release.</dd>
+
+<dt>Scan Health pill</dt>
+<dd>A coloured badge in the dashboard showing whether the scan ran successfully end-to-end. See §9.</dd>
+
+<dt>Server-Sent Events (SSE)</dt>
+<dd>A simple way for the server to push live updates to the browser over a long-lived HTTP connection. Used by the dashboard for progress, findings, heartbeats, errors.</dd>
+
+<dt>Severity</dt>
+<dd>How bad a vulnerability is, on a 5-point scale: Critical, High, Medium, Low, Info. Driven by CVSS.</dd>
+
+<dt>Shodan</dt>
+<dd>A search engine for internet-connected devices. VulnHive AI uses its free <i>InternetDB</i> endpoint to look up known CVEs affecting an IP address.</dd>
+
+<dt>SPF / DMARC</dt>
+<dd>DNS records that protect against email spoofing. Weak SPF/DMARC means attackers can send fake emails pretending to be the company.</dd>
+
+<dt>SQL Injection</dt>
+<dd>The classic web vulnerability: tricking the database into executing attacker queries. VulnHive AI tests four families: error-based, boolean-blind, time-blind, UNION-based.</dd>
+
+<dt>SSRF (Server-Side Request Forgery)</dt>
+<dd>Making the server fetch URLs the attacker chooses — often pointing at internal services that aren't reachable from outside the firewall.</dd>
+
+<dt>SSTI (Server-Side Template Injection)</dt>
+<dd>Injecting code into template engines (Jinja, Twig, Handlebars) so they execute attacker code on the server. Usually a 9.8 CVSS — full server compromise.</dd>
+
+<dt>Subdomain Takeover</dt>
+<dd>Re-registering an abandoned third-party service (Heroku, S3 bucket, etc.) whose DNS still points at it. Lets the attacker host phishing pages on the victim's domain.</dd>
+
+<dt>structlog</dt>
+<dd>A Python library for structured logging. v2.0.0 uses it so logs are machine-readable JSON and can be streamed to file, console, and the dashboard simultaneously.</dd>
+
+<dt>Validator</dt>
+<dd>The component that re-tests each candidate finding to assign a confidence label. Replaces the older "drop_false_positives" deletion behaviour.</dd>
+
+<dt>VRT (Vulnerability Rating Taxonomy)</dt>
+<dd>Bugcrowd's standard classification for vulnerabilities, used to determine bug-bounty payouts. Adding a VRT column to every finding is planned for a future release.</dd>
+
+<dt>WAF (Web Application Firewall)</dt>
+<dd>A security guard that sits in front of a website and blocks malicious requests. VulnHive AI identifies which of 25 known WAFs is in front of the target and loads bypass strategies.</dd>
+
+<dt>WeasyPrint</dt>
+<dd>A pure-Python library that turns HTML+CSS into print-quality PDFs without needing a browser. v2.0.0 uses it for cross-platform PDF export. This document was rendered by it.</dd>
+
+<dt>XSS (Cross-Site Scripting)</dt>
+<dd>Injecting JavaScript into a web page that then executes in other visitors' browsers. Comes in three flavours: reflected (one-shot), stored (persistent), DOM-based (client-side).</dd>
+
+<dt>XXE (XML External Entity)</dt>
+<dd>An attack against XML parsers that lets the attacker read local files or make the server connect to internal services.</dd>
+
+</dl>
+
+<h2>23. Conclusion</h2>
+
+<p>VulnHive AI started as an idea: <i>"What if professional penetration testing could be automated, intelligent, and free?"</i> Over three months and 32,000 lines of code, that idea became a real, working platform.</p>
+
+<p>v2.0.0 took that working platform and made it <b>honest</b>. The previous version did most of its job correctly, but it had a class of bugs — silent finding loss, fake parallelism, hidden errors — that quietly undermined the user's trust. The v2.0.0 release found 11 of those bugs and eliminated them. Just as importantly, it added the infrastructure (Scan Health pill, structured logging, confidence labelling, automated tests) so that <i>future</i> bugs of the same kind can't hide.</p>
+
+<p>The result combines the thoroughness of 25 specialised vulnerability scanners, the intelligence of modern AI, the power of industry-standard tools like Nmap and Nuclei, and the convenience of a beautiful, honest web dashboard — all running for free on a personal laptop, with no recurring costs and no data leaving your machine.</p>
+
+<div class="callout">
+  <p><b>In one sentence:</b> VulnHive AI puts a 25-person AI security team in everyone's hands — for free, with no silent failures.</p>
+</div>
+
+<p class="signature">
+  VulnHive AI — Complete Project Report &amp; User Guide (v2.0.0)<br>
+  Author: Shyam Kakkad  ·  github.com/0xShyam-Sec/VulnHive-AI<br>
+  For authorised security testing and educational use only.
+</p>
+
+</body>
+</html>
